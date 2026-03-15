@@ -12,8 +12,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 
-from app.config import CURRENT_IMAGE, DATA_DIR, INDEX_FILE
-from app.scheduler import get_status, run_nasa, run_rijksmuseum, start_scheduler
+from app.config import CURRENT_IMAGE, DATA_DIR, INDEX_FILE, NASA_CRON_HOUR, RIJKSMUSEUM_CRON_HOUR
+from app.scheduler import get_status, job_status, run_nasa, run_rijksmuseum, start_scheduler
 from app.sources import build_rijksmuseum_index
 
 # Logging
@@ -98,14 +98,44 @@ async def health():
     )
 
 
-@app.post("/api/push/rijksmuseum")
+@app.get("/api/next")
+async def next_image():
+    """Cycle to the next image. Switches source based on current one:
+    - If last was NASA -> push Rijksmuseum
+    - If last was Rijksmuseum -> push NASA
+    - Default: use time of day
+    """
+    nasa_status = job_status["nasa"]
+    rijks_status = job_status["rijksmuseum"]
+
+    # Determine which source to use (opposite of last successful push)
+    nasa_last = nasa_status.get("last_success") or ""
+    rijks_last = rijks_status.get("last_success") or ""
+
+    if nasa_last > rijks_last:
+        run_rijksmuseum()
+        return {"status": "ok", "source": "rijksmuseum", "message": "Switched to Rijksmuseum painting"}
+    elif rijks_last > nasa_last:
+        run_nasa()
+        return {"status": "ok", "source": "nasa", "message": "Switched to NASA APOD"}
+    else:
+        hour = datetime.now().hour
+        if RIJKSMUSEUM_CRON_HOUR <= hour < NASA_CRON_HOUR:
+            run_rijksmuseum()
+            return {"status": "ok", "source": "rijksmuseum", "message": "Rijksmuseum painting pushed"}
+        else:
+            run_nasa()
+            return {"status": "ok", "source": "nasa", "message": "NASA APOD pushed"}
+
+
+@app.get("/api/push/rijksmuseum")
 async def push_rijksmuseum():
     """Manually trigger a Rijksmuseum image push."""
     run_rijksmuseum()
     return {"status": "ok", "message": "Rijksmuseum image pushed"}
 
 
-@app.post("/api/push/nasa")
+@app.get("/api/push/nasa")
 async def push_nasa():
     """Manually trigger a NASA APOD push."""
     run_nasa()
@@ -118,7 +148,7 @@ async def status():
     return get_status()
 
 
-@app.post("/api/build-index")
+@app.get("/api/build-index")
 async def build_index(pages: int = 5):
     """Rebuild/extend the Rijksmuseum landscape index."""
     index = build_rijksmuseum_index(max_pages=pages)

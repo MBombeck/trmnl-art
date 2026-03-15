@@ -15,7 +15,9 @@ MIN_LANDSCAPE_RATIO = 1.2
 
 # Schedules (cron-style)
 RIJKSMUSEUM_CRON_HOUR = int(os.environ.get("RIJKSMUSEUM_HOUR", "5"))
-NASA_CRON_HOUR = int(os.environ.get("NASA_HOUR", "12"))
+RIJKSMUSEUM_CRON_MINUTE = int(os.environ.get("RIJKSMUSEUM_MINUTE", "0"))
+NASA_CRON_HOUR = int(os.environ.get("NASA_HOUR", "14"))
+NASA_CRON_MINUTE = int(os.environ.get("NASA_MINUTE", "30"))
 TIMEZONE = os.environ.get("TZ", "Europe/Berlin")
 
 # Data persistence

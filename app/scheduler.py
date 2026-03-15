@@ -12,8 +12,10 @@ from app.config import (
     DATA_DIR,
     MAX_RETRIES,
     NASA_CRON_HOUR,
+    NASA_CRON_MINUTE,
     RETRY_DELAY_MINUTES,
     RIJKSMUSEUM_CRON_HOUR,
+    RIJKSMUSEUM_CRON_MINUTE,
     TIMEZONE,
 )
 from app.processing import process_image
@@ -100,7 +102,7 @@ def start_scheduler():
     """Start the background scheduler with cron jobs."""
     scheduler.add_job(
         run_rijksmuseum,
-        CronTrigger(hour=RIJKSMUSEUM_CRON_HOUR, minute=0, timezone=TIMEZONE),
+        CronTrigger(hour=RIJKSMUSEUM_CRON_HOUR, minute=RIJKSMUSEUM_CRON_MINUTE, timezone=TIMEZONE),
         id="rijksmuseum_daily",
         replace_existing=True,
         misfire_grace_time=3600,
@@ -108,7 +110,7 @@ def start_scheduler():
 
     scheduler.add_job(
         run_nasa,
-        CronTrigger(hour=NASA_CRON_HOUR, minute=0, timezone=TIMEZONE),
+        CronTrigger(hour=NASA_CRON_HOUR, minute=NASA_CRON_MINUTE, timezone=TIMEZONE),
         id="nasa_daily",
         replace_existing=True,
         misfire_grace_time=3600,
@@ -116,8 +118,8 @@ def start_scheduler():
 
     scheduler.start()
     log.info(
-        f"Scheduler started: Rijksmuseum at {RIJKSMUSEUM_CRON_HOUR}:00, "
-        f"NASA at {NASA_CRON_HOUR}:00 ({TIMEZONE})"
+        f"Scheduler started: Rijksmuseum at {RIJKSMUSEUM_CRON_HOUR}:{RIJKSMUSEUM_CRON_MINUTE:02d}, "
+        f"NASA at {NASA_CRON_HOUR}:{NASA_CRON_MINUTE:02d} ({TIMEZONE})"
     )
 
 
