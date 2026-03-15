@@ -5,3 +5,4 @@ data/
 *.bmp
 *.png
 .venv/
+!data-seed/

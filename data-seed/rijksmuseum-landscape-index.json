@@ -1,0 +1,2022 @@
+[
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200105887",
+    "obj_id": "200105887",
+    "iiif_id": "YAxov",
+    "title": "Katjesspel",
+    "artist": "Henriëtte Ronner (vermeld op object)",
+    "width": 3720,
+    "height": 2696,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200105889",
+    "obj_id": "200105889",
+    "iiif_id": "PbGmB",
+    "title": "Pinken in de branding",
+    "artist": "Hendrik Willem Mesdag",
+    "width": 6372,
+    "height": 3135,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200106038",
+    "obj_id": "200106038",
+    "iiif_id": "hodeb",
+    "title": "Landschap met stenen brug",
+    "artist": "Rembrandt van Rijn",
+    "width": 6108,
+    "height": 4301,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200106839",
+    "obj_id": "200106839",
+    "iiif_id": "ywbNv",
+    "title": "Ingelijste muurschildering voorstellende Xiwangmu en dienaressen",
+    "artist": "anonymous",
+    "width": 8046,
+    "height": 5598,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200106864",
+    "obj_id": "200106864",
+    "iiif_id": "Yvgrq",
+    "title": "Man met een vrouw op schoot",
+    "artist": "anoniem",
+    "width": 6434,
+    "height": 3340,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107007",
+    "obj_id": "200107007",
+    "iiif_id": "PYMfr",
+    "title": "Waaierschildering met een rivierlandschap",
+    "artist": "anonymous",
+    "width": 7004,
+    "height": 4192,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107756",
+    "obj_id": "200107756",
+    "iiif_id": "hQYKU",
+    "title": "The Meeting of Granida and Daifilo",
+    "artist": "Jan Mijtens (signed by artist)",
+    "width": 6015,
+    "height": 4657,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107761",
+    "obj_id": "200107761",
+    "iiif_id": "NxFOh",
+    "title": "The Meeting of Jacob and Rachel",
+    "artist": "Nicolaes Moeyaert",
+    "width": 3898,
+    "height": 2604,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107781",
+    "obj_id": "200107781",
+    "iiif_id": "VzZmq",
+    "title": "River View by Moonlight",
+    "artist": "Aert van der Neer (mentioned on object)",
+    "width": 5876,
+    "height": 3082,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107792",
+    "obj_id": "200107792",
+    "iiif_id": "OfGsE",
+    "title": "Berglandschap bij Düsseldorf",
+    "artist": "Gerard van Nijmegen",
+    "width": 7016,
+    "height": 4867,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107793",
+    "obj_id": "200107793",
+    "iiif_id": "apxGf",
+    "title": "De zeeslag bij Livorno, 14 maart 1653",
+    "artist": "Reinier Nooms",
+    "width": 6280,
+    "height": 3748,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107798",
+    "obj_id": "200107798",
+    "iiif_id": "MsOUQ",
+    "title": "View of Canton, China",
+    "artist": "toegeschreven aan Johannes Vinckboons",
+    "width": 5450,
+    "height": 3800,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107810",
+    "obj_id": "200107810",
+    "iiif_id": "DeWrv",
+    "title": "Schipbreuk op een rotsachtige kust",
+    "artist": "Wijnand Nuijen",
+    "width": 6171,
+    "height": 4568,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107820",
+    "obj_id": "200107820",
+    "iiif_id": "vFvZz",
+    "title": "Het dansende paar",
+    "artist": "Adriaen van Ostade (mentioned on object)",
+    "width": 5903,
+    "height": 4105,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107821",
+    "obj_id": "200107821",
+    "iiif_id": "NFDsy",
+    "title": "Boerengezelschap binnenshuis",
+    "artist": "Adriaen van Ostade (vermeld op object)",
+    "width": 6085,
+    "height": 4713,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107827",
+    "obj_id": "200107827",
+    "iiif_id": "wkUPM",
+    "title": "Boerenherberg met paard aan de trog",
+    "artist": "Isaac van Ostade",
+    "width": 6138,
+    "height": 4567,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107873",
+    "obj_id": "200107873",
+    "iiif_id": "yaEop",
+    "title": "Watermolen bij een beboste heuvel",
+    "artist": "Gillis Peeters (I)",
+    "width": 6249,
+    "height": 4677,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107874",
+    "obj_id": "200107874",
+    "iiif_id": "GebpD",
+    "title": "De slag bij Waterloo",
+    "artist": "Jan Willem Pieneman",
+    "width": 8106,
+    "height": 5399,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107875",
+    "obj_id": "200107875",
+    "iiif_id": "qvPBp",
+    "title": "The Battle of Bautersem during the Ten Days’ Campaign",
+    "artist": "Nicolaas Pieneman (signed by artist)",
+    "width": 7391,
+    "height": 5662,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107877",
+    "obj_id": "200107877",
+    "iiif_id": "DokhU",
+    "title": "Portraits of Giuliano and Francesco Giamberti da Sangallo",
+    "artist": "Piero di Cosimo",
+    "width": 6278,
+    "height": 4413,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107879",
+    "obj_id": "200107879",
+    "iiif_id": "hFCRi",
+    "title": "Rijke kinderen, arme ouders",
+    "artist": "Aert Pietersz.",
+    "width": 3982,
+    "height": 1478,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107883",
+    "obj_id": "200107883",
+    "iiif_id": "UWhBb",
+    "title": "Brazilian Village",
+    "artist": "Frans Jansz. Post",
+    "width": 6779,
+    "height": 5127,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107884",
+    "obj_id": "200107884",
+    "iiif_id": "yhhAc",
+    "title": "Franciscaner klooster",
+    "artist": "Frans Jansz. Post",
+    "width": 7128,
+    "height": 4660,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107885",
+    "obj_id": "200107885",
+    "iiif_id": "zNLgL",
+    "title": "Landscape on the Senhor de Engenho river, Dutch Brazil",
+    "artist": "Frans Jansz Post (mentioned on object)",
+    "width": 6218,
+    "height": 4816,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107886",
+    "obj_id": "200107886",
+    "iiif_id": "nykBz",
+    "title": "Brazilian landscape",
+    "artist": "Frans Jansz Post (mentioned on object)",
+    "width": 5652,
+    "height": 4543,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107887",
+    "obj_id": "200107887",
+    "iiif_id": "zcGWb",
+    "title": "Gezicht op Olinda, Brazilië",
+    "artist": "Frans Jansz. Post",
+    "width": 6857,
+    "height": 4227,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107888",
+    "obj_id": "200107888",
+    "iiif_id": "yovsf",
+    "title": "Orpheus en de dieren",
+    "artist": "Paulus Potter",
+    "width": 5850,
+    "height": 4274,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107891",
+    "obj_id": "200107891",
+    "iiif_id": "kPsrG",
+    "title": "Paulus en Barnabas te Lystra door het volk als goden vereerd",
+    "artist": "Jacob Symonsz Pynas (signed by artist)",
+    "width": 3720,
+    "height": 2264,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107928",
+    "obj_id": "200107928",
+    "iiif_id": "PJEZO",
+    "title": "Officieren en andere schutters van wijk II in Amsterdam, onder leiding van kapitein Frans Banninck Cocq en luitenant Willem van Ruytenburch, bekend als ‘De Nachtwacht’",
+    "artist": "Rembrandt van Rijn",
+    "width": 14645,
+    "height": 12158,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107929",
+    "obj_id": "200107929",
+    "iiif_id": "cWWQE",
+    "title": "De Staalmeesters: het college van staalmeesters (waardijns) van het Amsterdamse lakenbereidersgilde",
+    "artist": "Rembrandt van Rijn",
+    "width": 10880,
+    "height": 7372,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107934",
+    "obj_id": "200107934",
+    "iiif_id": "uRWXq",
+    "title": "Isaac and Rebecca, Known as ‘The Jewish Bride’",
+    "artist": "Rembrandt van Rijn",
+    "width": 7620,
+    "height": 5542,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107938",
+    "obj_id": "200107938",
+    "iiif_id": "pVyUn",
+    "title": "Kopie naar De Nachtwacht",
+    "artist": "toegeschreven aan Gerrit Lundens",
+    "width": 10449,
+    "height": 8183,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107940",
+    "obj_id": "200107940",
+    "iiif_id": "jjmVB",
+    "title": "Vanitas stilleven",
+    "artist": "Jan Lievens",
+    "width": 6058,
+    "height": 4627,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107943",
+    "obj_id": "200107943",
+    "iiif_id": "OgAJr",
+    "title": "The Holy Family at Night",
+    "artist": "atelier van Rembrandt van Rijn",
+    "width": 5946,
+    "height": 4430,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107948",
+    "obj_id": "200107948",
+    "iiif_id": "xQTZV",
+    "title": "Plas bij Loosdrecht",
+    "artist": "Willem Roelofs (I) (vermeld op object)",
+    "width": 5972,
+    "height": 3855,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107949",
+    "obj_id": "200107949",
+    "iiif_id": "rkbGp",
+    "title": "Water Meadows on the River IJssel",
+    "artist": "Willem Roelofs (I)",
+    "width": 5864,
+    "height": 3587,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107950",
+    "obj_id": "200107950",
+    "iiif_id": "ATzRy",
+    "title": "Weidelandschap met vee",
+    "artist": "Willem Roelofs (I)",
+    "width": 6038,
+    "height": 3721,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107951",
+    "obj_id": "200107951",
+    "iiif_id": "erkDb",
+    "title": "Landschap in de omgeving van Den Haag",
+    "artist": "Willem Roelofs (I)",
+    "width": 5707,
+    "height": 3749,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107953",
+    "obj_id": "200107953",
+    "iiif_id": "EJsKB",
+    "title": "De afgoderij van Jerobeam",
+    "artist": "Jacques Ignatius de Roore",
+    "width": 6823,
+    "height": 5204,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107965",
+    "obj_id": "200107965",
+    "iiif_id": "fjTNG",
+    "title": "Interieur van de Sint-Odulphuskerk te Assendelft, gezien vanuit het koor naar het westen",
+    "artist": "Pieter Jansz. Saenredam (eigenhandig gesigneerd)",
+    "width": 6385,
+    "height": 4157,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107966",
+    "obj_id": "200107966",
+    "iiif_id": "xgUtS",
+    "title": "Het oude stadhuis in Amsterdam",
+    "artist": "Pieter Jansz Saenredam (signed by artist)",
+    "width": 5710,
+    "height": 4406,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107967",
+    "obj_id": "200107967",
+    "iiif_id": "vkhWE",
+    "title": "Gezelschap voor een dorpsherberg",
+    "artist": "Cornelis Saftleven (eigenhandig gesigneerd)",
+    "width": 7230,
+    "height": 5425,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107968",
+    "obj_id": "200107968",
+    "iiif_id": "yuZXn",
+    "title": "View of the Rhine near Rheineck Castle",
+    "artist": "Herman Saftleven (signed by artist)",
+    "width": 6351,
+    "height": 4231,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107974",
+    "obj_id": "200107974",
+    "iiif_id": "gjksg",
+    "title": "Landschap met de geschiedenis van de dochter van Jefta",
+    "artist": "Jacob Savery (I) (vermeld op object)",
+    "width": 5710,
+    "height": 3332,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107978",
+    "obj_id": "200107978",
+    "iiif_id": "RPjbD",
+    "title": "A Frozen Canal near the River Maas",
+    "artist": "Andreas Schelfhout",
+    "width": 6307,
+    "height": 4168,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107980",
+    "obj_id": "200107980",
+    "iiif_id": "tkrHY",
+    "title": "The Princess of Orange Visiting the Work-shop of Bartholomeus van der Helst",
+    "artist": "Hendrik Jacobus Scholten",
+    "width": 5590,
+    "height": 4234,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107983",
+    "obj_id": "200107983",
+    "iiif_id": "wYOLd",
+    "title": "Portret van Joris van Egmond (1504-1559)",
+    "artist": "Jan van Scorel",
+    "width": 5877,
+    "height": 4101,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107984",
+    "obj_id": "200107984",
+    "iiif_id": "yyaLS",
+    "title": "The Dying Cleopatra",
+    "artist": "toegeschreven aan Jan van Scorel",
+    "width": 5659,
+    "height": 3288,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107988",
+    "obj_id": "200107988",
+    "iiif_id": "PHqQR",
+    "title": "Rivierdal",
+    "artist": "Hercules Segers",
+    "width": 5977,
+    "height": 3322,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107990",
+    "obj_id": "200107990",
+    "iiif_id": "BPTNf",
+    "title": "Stilleven met dood wild, vruchten en groenten",
+    "artist": "Frans Snijders",
+    "width": 6347,
+    "height": 3993,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107991",
+    "obj_id": "200107991",
+    "iiif_id": "NRfCv",
+    "title": "The Vegetable Market",
+    "artist": "Hendrick Martensz Sorgh",
+    "width": 6231,
+    "height": 4428,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200107998",
+    "obj_id": "200107998",
+    "iiif_id": "agWzx",
+    "title": "The quack",
+    "artist": "Jan Havicksz. Steen",
+    "width": 4908,
+    "height": 3582,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108000",
+    "obj_id": "200108000",
+    "iiif_id": "Kmqnt",
+    "title": "Landschap met veedrijver en schaapherder",
+    "artist": "Jacob van Strij",
+    "width": 6978,
+    "height": 4664,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108001",
+    "obj_id": "200108001",
+    "iiif_id": "pAjvX",
+    "title": "De dorstigen laven",
+    "artist": "Michael Sweerts",
+    "width": 6338,
+    "height": 4602,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108003",
+    "obj_id": "200108003",
+    "iiif_id": "eFySd",
+    "title": "De hongerigen spijzen",
+    "artist": "Michael Sweerts",
+    "width": 6165,
+    "height": 4616,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108004",
+    "obj_id": "200108004",
+    "iiif_id": "mygdE",
+    "title": "De zieken bezoeken",
+    "artist": "Michael Sweerts",
+    "width": 6088,
+    "height": 4537,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108006",
+    "obj_id": "200108006",
+    "iiif_id": "rCoVs",
+    "title": "Clothing the Naked",
+    "artist": "Michael Sweerts",
+    "width": 6111,
+    "height": 4506,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108008",
+    "obj_id": "200108008",
+    "iiif_id": "psrnF",
+    "title": "De waterval van Tivoli",
+    "artist": "Abraham Teerlink",
+    "width": 6159,
+    "height": 4347,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108010",
+    "obj_id": "200108010",
+    "iiif_id": "aUjUX",
+    "title": "Peasant Kermis",
+    "artist": "David Teniers (II)",
+    "width": 6793,
+    "height": 5016,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108012",
+    "obj_id": "200108012",
+    "iiif_id": "SbsFC",
+    "title": "The merry family",
+    "artist": "Jan Havicksz. Steen",
+    "width": 5876,
+    "height": 4619,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108018",
+    "obj_id": "200108018",
+    "iiif_id": "MboOL",
+    "title": "Een bouwhoeve aan de oever van een beek in Gelderland",
+    "artist": "Wouter Johannes van Troostwijk",
+    "width": 6461,
+    "height": 5328,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108021",
+    "obj_id": "200108021",
+    "iiif_id": "bEzBe",
+    "title": "Het kasteel Vredenburch te Utrecht in vogelvlucht",
+    "artist": "anoniem",
+    "width": 5716,
+    "height": 4438,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108023",
+    "obj_id": "200108023",
+    "iiif_id": "BORuG",
+    "title": "Farao's dochter vindt Mozes in het biezen mandje",
+    "artist": "Moyses van Wtenbrouck (signed by artist)",
+    "width": 6597,
+    "height": 4818,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108031",
+    "obj_id": "200108031",
+    "iiif_id": "MvsuJ",
+    "title": "Armeens gezelschap bij het kaartspel",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5592,
+    "height": 4199,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108034",
+    "obj_id": "200108034",
+    "iiif_id": "OvWst",
+    "title": "Lying-in Room of a Distinguished Turkish Woman",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6278,
+    "height": 3860,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108036",
+    "obj_id": "200108036",
+    "iiif_id": "pUqCQ",
+    "title": "Cornelis Calkoen op weg naar de audiëntie bij sultan Ahmed III",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5902,
+    "height": 4282,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108037",
+    "obj_id": "200108037",
+    "iiif_id": "DEfhZ",
+    "title": "An Ambassador's Audience with Sultan Ahmed III (Ambassador Cornelis Calkoen)",
+    "artist": "anoniem",
+    "width": 5626,
+    "height": 4024,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108038",
+    "obj_id": "200108038",
+    "iiif_id": "buEmQ",
+    "title": "The Meal in Honour of Ambassador Cornelis Calkoen",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5973,
+    "height": 4390,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108041",
+    "obj_id": "200108041",
+    "iiif_id": "RpBvj",
+    "title": "Ambassadeur Cornelis Calkoen op audiëntie bij sultan Ahmed III, 14 september 1727",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6109,
+    "height": 4422,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108049",
+    "obj_id": "200108049",
+    "iiif_id": "dXtqv",
+    "title": "Banquet of Distinguished Turkish Women",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5978,
+    "height": 4496,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108051",
+    "obj_id": "200108051",
+    "iiif_id": "DCnbX",
+    "title": "Griekse bruiloft",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 7104,
+    "height": 4314,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108054",
+    "obj_id": "200108054",
+    "iiif_id": "fMoCm",
+    "title": "Derwisjen aan de maaltijd",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5861,
+    "height": 4460,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108060",
+    "obj_id": "200108060",
+    "iiif_id": "QvExu",
+    "title": "Greek Men and Women Dancing the Khorra",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5749,
+    "height": 4348,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108066",
+    "obj_id": "200108066",
+    "iiif_id": "kYesm",
+    "title": "The First Day of School",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5654,
+    "height": 4102,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108069",
+    "obj_id": "200108069",
+    "iiif_id": "JcpYV",
+    "title": "Armeense bruiloft",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5414,
+    "height": 4084,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108072",
+    "obj_id": "200108072",
+    "iiif_id": "vBMfa",
+    "title": "Fête champêtre with Turkish Courtiers under a Tent",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6286,
+    "height": 3878,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108073",
+    "obj_id": "200108073",
+    "iiif_id": "KLNFD",
+    "title": "Turkse vrouwen in de omgeving van Istanbul",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5899,
+    "height": 4489,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108077",
+    "obj_id": "200108077",
+    "iiif_id": "qgecZ",
+    "title": "The Water Reservoirs, the so-called Bends, in Belgrade Forest",
+    "artist": "Johann Christian Vollerdt",
+    "width": 6799,
+    "height": 5492,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108081",
+    "obj_id": "200108081",
+    "iiif_id": "jeoAx",
+    "title": "Damesfeest in Hünkâr İskelesi aan de Bosporus",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5499,
+    "height": 4082,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108082",
+    "obj_id": "200108082",
+    "iiif_id": "fTONy",
+    "title": "View of Ankara",
+    "artist": "anoniem",
+    "width": 7609,
+    "height": 4456,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108083",
+    "obj_id": "200108083",
+    "iiif_id": "WWphG",
+    "title": "Dansende derwisjen",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 5928,
+    "height": 4385,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108084",
+    "obj_id": "200108084",
+    "iiif_id": "WYwRX",
+    "title": "De grootvizier steekt de Atmeydanı (hippodroom) over",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6020,
+    "height": 4369,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108086",
+    "obj_id": "200108086",
+    "iiif_id": "qjLAm",
+    "title": "De moord op Patrona Halil en zijn volgelingen",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6955,
+    "height": 5171,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108087",
+    "obj_id": "200108087",
+    "iiif_id": "JAMvJ",
+    "title": "Turkse bruiloft",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 6264,
+    "height": 3828,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108088",
+    "obj_id": "200108088",
+    "iiif_id": "LVFGm",
+    "title": "Gezicht op Istanbul vanuit de Nederlandse ambassade in Pera",
+    "artist": "Jean Baptiste Vanmour",
+    "width": 3664,
+    "height": 2334,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108089",
+    "obj_id": "200108089",
+    "iiif_id": "XKaab",
+    "title": "An Embassy Building in Pera",
+    "artist": "atelier van Jean Baptiste Vanmour",
+    "width": 5181,
+    "height": 4159,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108123",
+    "obj_id": "200108123",
+    "iiif_id": "mReXJ",
+    "title": "The Egg Dance",
+    "artist": "Pieter Aertsen",
+    "width": 7221,
+    "height": 3501,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108126",
+    "obj_id": "200108126",
+    "iiif_id": "rfeVO",
+    "title": "The Egyptian Widow",
+    "artist": "Lourens Alma Tadema",
+    "width": 6134,
+    "height": 4626,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108131",
+    "obj_id": "200108131",
+    "iiif_id": "CpAyu",
+    "title": "Schepen bij Zierikzee met de Zuidhavenpoort in de achtergrond",
+    "artist": "Hendrick van Anthonissen (mentioned on object)",
+    "width": 6336,
+    "height": 4609,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108134",
+    "obj_id": "200108134",
+    "iiif_id": "gpmAq",
+    "title": "Het optrekken van Darius voor de slag bij Issus",
+    "artist": "atelier van Apollonio di Giovanni",
+    "width": 31175,
+    "height": 8707,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108135",
+    "obj_id": "200108135",
+    "iiif_id": "cWYkO",
+    "title": "Het dal van de Anio met de watervallen van Tivoli",
+    "artist": "Cornelis Apostool",
+    "width": 3882,
+    "height": 2838,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108137",
+    "obj_id": "200108137",
+    "iiif_id": "oXsSN",
+    "title": "Fishermen on the Bank of the Amstel near the Pauwentuin, Amsterdam",
+    "artist": "Arent Arentsz. (eigenhandig gesigneerd)",
+    "width": 4012,
+    "height": 2006,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108138",
+    "obj_id": "200108138",
+    "iiif_id": "FEfal",
+    "title": "Fishermen and Hunters",
+    "artist": "Arent Arentsz (signed by artist)",
+    "width": 6316,
+    "height": 3128,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108141",
+    "obj_id": "200108141",
+    "iiif_id": "kNdFS",
+    "title": "Jongen en meisje in het duin",
+    "artist": "David Adolph Constant Artz (vermeld op object)",
+    "width": 3936,
+    "height": 2676,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108142",
+    "obj_id": "200108142",
+    "iiif_id": "DfDhr",
+    "title": "In het weeshuis te Katwijk-Binnen",
+    "artist": "David Adolph Constant Artz (vermeld op object)",
+    "width": 3758,
+    "height": 2796,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108144",
+    "obj_id": "200108144",
+    "iiif_id": "rIgfp",
+    "title": "Cavalry Attack at Sunset",
+    "artist": "Jan Asselijn",
+    "width": 6348,
+    "height": 4134,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108145",
+    "obj_id": "200108145",
+    "iiif_id": "pnynH",
+    "title": "Muleteers beside an Italian Ruin",
+    "artist": "Jan Asselijn",
+    "width": 6229,
+    "height": 5084,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108146",
+    "obj_id": "200108146",
+    "iiif_id": "hZepb",
+    "title": "De bedreigde zwaan",
+    "artist": "Jan Asselijn",
+    "width": 5892,
+    "height": 4903,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108147",
+    "obj_id": "200108147",
+    "iiif_id": "jygAk",
+    "title": "Stilleven met vruchten en bloemen",
+    "artist": "Balthasar van der Ast (signed by artist)",
+    "width": 6012,
+    "height": 3321,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108162",
+    "obj_id": "200108162",
+    "iiif_id": "NafaR",
+    "title": "IJsvermaak bij een dorp",
+    "artist": "Hendrick Avercamp (eigenhandig gesigneerd)",
+    "width": 6241,
+    "height": 3094,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108163",
+    "obj_id": "200108163",
+    "iiif_id": "aXnzA",
+    "title": "Winter Landscape with Iceskaters",
+    "artist": "Hendrick Avercamp (signed by artist)",
+    "width": 6337,
+    "height": 3674,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108164",
+    "obj_id": "200108164",
+    "iiif_id": "WwEzP",
+    "title": "IJsvermaak",
+    "artist": "Hendrick Avercamp (eigenhandig gesigneerd)",
+    "width": 6391,
+    "height": 4254,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108170",
+    "obj_id": "200108170",
+    "iiif_id": "EjJOg",
+    "title": "The Apotheosis of Cornelis de Witt, with the Dutch Raid on the Medway in the background",
+    "artist": "kopie naar Jan de Baen",
+    "width": 6476,
+    "height": 4814,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108174",
+    "obj_id": "200108174",
+    "iiif_id": "oFLMO",
+    "title": "De families Bakhuysen en de Hooghe aan de maaltijd op de Mosselsteiger aan het IJ te Amsterdam",
+    "artist": "Ludolf Bakhuysen (eigenhandig gesigneerd)",
+    "width": 7523,
+    "height": 5395,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108176",
+    "obj_id": "200108176",
+    "iiif_id": "WFThZ",
+    "title": "The Frigate 'Brielle' on the Maas off Rotterdam",
+    "artist": "Ludolf Bakhuysen",
+    "width": 6477,
+    "height": 4306,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108177",
+    "obj_id": "200108177",
+    "iiif_id": "YBpdt",
+    "title": "Rough Sea",
+    "artist": "Ludolf Bakhuysen",
+    "width": 15042,
+    "height": 11520,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108179",
+    "obj_id": "200108179",
+    "iiif_id": "PjJXT",
+    "title": "Het IJ voor Amsterdam",
+    "artist": "Ludolf Bakhuysen",
+    "width": 13596,
+    "height": 11206,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108183",
+    "obj_id": "200108183",
+    "iiif_id": "HFzyu",
+    "title": "Bacchus en zijn gevolg bieden Diana wijn en fruit aan",
+    "artist": "Hendrik van Balen (I)",
+    "width": 6144,
+    "height": 4490,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108184",
+    "obj_id": "200108184",
+    "iiif_id": "kiICv",
+    "title": "The St Martin's Day Kermis",
+    "artist": "Peeter Baltens",
+    "width": 3900,
+    "height": 2864,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108185",
+    "obj_id": "200108185",
+    "iiif_id": "aMdtQ",
+    "title": "A Flemish Kermis with a Performance of the Farce ‘Een cluyte van Plaeyerwater’",
+    "artist": "Peeter Baltens",
+    "width": 14337,
+    "height": 10072,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108190",
+    "obj_id": "200108190",
+    "iiif_id": "mHKLO",
+    "title": "Gezelschap in een interieur",
+    "artist": "Bartholomeus van Bassen (eigenhandig gesigneerd), Esaias van de Velde",
+    "width": 5861,
+    "height": 4065,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108195",
+    "obj_id": "200108195",
+    "iiif_id": "zAHRn",
+    "title": "Vier momenten uit de aanwezigheid van de Engels-Nederlandse vloot in de Baai van Algiers, 26-27 augustus 1816",
+    "artist": "Nicolaas Baur",
+    "width": 5270,
+    "height": 3844,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108196",
+    "obj_id": "200108196",
+    "iiif_id": "DEmoX",
+    "title": "De Engels-Nederlandse vloot onder Lord Exmouth en vice-admiraal Jonkheer Theodorus Frederik van Capellen stelt de Algerijnse fortificaties buiten gevecht, 27 augustus 1816",
+    "artist": "Nicolaas Baur",
+    "width": 6171,
+    "height": 4799,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108197",
+    "obj_id": "200108197",
+    "iiif_id": "gbnGP",
+    "title": "Het kasteel van Batavia, gezien van Kali Besar West",
+    "artist": "Andries Beeckman",
+    "width": 7404,
+    "height": 5286,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108202",
+    "obj_id": "200108202",
+    "iiif_id": "UXQNw",
+    "title": "Slag bij Terheide",
+    "artist": "Jan Abrahamsz. Beerstraten",
+    "width": 5935,
+    "height": 3605,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108204",
+    "obj_id": "200108204",
+    "iiif_id": "YpGBS",
+    "title": "The Paalhuis and the Nieuwe Brug, Amsterdam, in the Winter",
+    "artist": "Jan Abrahamsz. Beerstraten",
+    "width": 5734,
+    "height": 4762,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108205",
+    "obj_id": "200108205",
+    "iiif_id": "jaRcd",
+    "title": "A French Squadron near a Rocky Coast",
+    "artist": "Jacob Bellevois",
+    "width": 6367,
+    "height": 3497,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108206",
+    "obj_id": "200108206",
+    "iiif_id": "TYrhd",
+    "title": "Een Frans eskader bij een rotsachtige kust",
+    "artist": "Jacob Bellevois",
+    "width": 6264,
+    "height": 4331,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108208",
+    "obj_id": "200108208",
+    "iiif_id": "OYdfF",
+    "title": "Stadswal van Haarlem in de winter",
+    "artist": "Nicolaes Pietersz. Berchem",
+    "width": 5637,
+    "height": 4423,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108209",
+    "obj_id": "200108209",
+    "iiif_id": "rmdGK",
+    "title": "De drie kudden",
+    "artist": "Nicolaes Pietersz. Berchem",
+    "width": 7146,
+    "height": 4694,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108214",
+    "obj_id": "200108214",
+    "iiif_id": "pvcQC",
+    "title": "The Town Hall on the Dam, Amsterdam",
+    "artist": "Gerrit Berckheyde",
+    "width": 5289,
+    "height": 4311,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108215",
+    "obj_id": "200108215",
+    "iiif_id": "rguTY",
+    "title": "Het Oude Zijds Herenlogement te Amsterdam",
+    "artist": "Gerrit Berckheyde",
+    "width": 9494,
+    "height": 7154,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108216",
+    "obj_id": "200108216",
+    "iiif_id": "Abihw",
+    "title": "De Waag en de kraan aan het Spaarne te Haarlem",
+    "artist": "Gerrit Berckheyde",
+    "width": 3916,
+    "height": 2782,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108217",
+    "obj_id": "200108217",
+    "iiif_id": "DSVKf",
+    "title": "De voorpoort van kasteel Egmond",
+    "artist": "Gerrit Berckheyde",
+    "width": 3808,
+    "height": 2868,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108218",
+    "obj_id": "200108218",
+    "iiif_id": "opJfz",
+    "title": "The Town Hall on Dam Square, Amsterdam",
+    "artist": "Gerrit Berckheyde",
+    "width": 5313,
+    "height": 4395,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108219",
+    "obj_id": "200108219",
+    "iiif_id": "vrZPY",
+    "title": "Interior of the Church of St Bavo in Haarlem",
+    "artist": "Job Adriaensz Berckheyde",
+    "width": 6092,
+    "height": 4687,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108225",
+    "obj_id": "200108225",
+    "iiif_id": "kdZgt",
+    "title": "River View",
+    "artist": "Abraham van Beijeren (vermeld op object)",
+    "width": 6857,
+    "height": 5051,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108226",
+    "obj_id": "200108226",
+    "iiif_id": "ffnha",
+    "title": "Bosvijver bij zonsondergang",
+    "artist": "Gerard Bilders (mentioned on object)",
+    "width": 6076,
+    "height": 3743,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108227",
+    "obj_id": "200108227",
+    "iiif_id": "CELNr",
+    "title": "Meadow near Oosterbeek",
+    "artist": "Gerard Bilders (mentioned on object)",
+    "width": 5754,
+    "height": 4102,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108235",
+    "obj_id": "200108235",
+    "iiif_id": "iLfNl",
+    "title": "De slag op de Zuiderzee, 1573",
+    "artist": "Jan Theunisz. Blanckerhoff (mentioned on object)",
+    "width": 3412,
+    "height": 2490,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108239",
+    "obj_id": "200108239",
+    "iiif_id": "ZtjNL",
+    "title": "Boerenkermis",
+    "artist": "Pieter de Bloot",
+    "width": 6497,
+    "height": 4637,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108240",
+    "obj_id": "200108240",
+    "iiif_id": "bdmdp",
+    "title": "Zandweg",
+    "artist": "Théophile de Bock",
+    "width": 7636,
+    "height": 5364,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108248",
+    "obj_id": "200108248",
+    "iiif_id": "vNmhc",
+    "title": "Drie regentessen van het Leprozenhuis te Amsterdam, 1668",
+    "artist": "Ferdinand Bol, anoniem",
+    "width": 7131,
+    "height": 5752,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108253",
+    "obj_id": "200108253",
+    "iiif_id": "heOvK",
+    "title": "Pharoah's Daughter Discovers Moses in the Rush Basket",
+    "artist": "Ferdinand Bol",
+    "width": 11034,
+    "height": 9174,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108278",
+    "obj_id": "200108278",
+    "iiif_id": "tvMKA",
+    "title": "The Drawing Lesson",
+    "artist": "Jan ter Borch (eigenhandig gesigneerd)",
+    "width": 4934,
+    "height": 3666,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108279",
+    "obj_id": "200108279",
+    "iiif_id": "aqDHu",
+    "title": "Festoen van vruchten.",
+    "artist": "Johannes Borman",
+    "width": 5634,
+    "height": 4558,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108284",
+    "obj_id": "200108284",
+    "iiif_id": "KCBSr",
+    "title": "Battle between Carnival and Lent",
+    "artist": "manner of Jheronimus Bosch",
+    "width": 6576,
+    "height": 2331,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108286",
+    "obj_id": "200108286",
+    "iiif_id": "CvFtF",
+    "title": "The Arrest of Christ",
+    "artist": "manner of Jheronimus Bosch",
+    "width": 3830,
+    "height": 2416,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108287",
+    "obj_id": "200108287",
+    "iiif_id": "AxKzY",
+    "title": "De verzoeking van de heilige Antonius de Heremiet",
+    "artist": "manner of Jheronimus Bosch",
+    "width": 3522,
+    "height": 2714,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108289",
+    "obj_id": "200108289",
+    "iiif_id": "MALRD",
+    "title": "De Aanbidding van het Kind",
+    "artist": "manner of Jheronimus Bosch",
+    "width": 6246,
+    "height": 4759,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108290",
+    "obj_id": "200108290",
+    "iiif_id": "dFurv",
+    "title": "The Temptation of St Anthony",
+    "artist": "copy after Jheronimus Bosch",
+    "width": 5622,
+    "height": 4385,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108292",
+    "obj_id": "200108292",
+    "iiif_id": "rjPSU",
+    "title": "Italian Landscape with Mule Driver",
+    "artist": "Jan Both (mentioned on object)",
+    "width": 3750,
+    "height": 2848,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108293",
+    "obj_id": "200108293",
+    "iiif_id": "PpsTW",
+    "title": "Italian Landscape with a Draughtsman",
+    "artist": "Jan Both (vermeld op object)",
+    "width": 5911,
+    "height": 4678,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108294",
+    "obj_id": "200108294",
+    "iiif_id": "cHNtQ",
+    "title": "Volksscène met Romeinse ruïnes",
+    "artist": "Jan Both (vermeld op object)",
+    "width": 5789,
+    "height": 4650,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108298",
+    "obj_id": "200108298",
+    "iiif_id": "wyNkk",
+    "title": "Het Sint Nicolaasfeest",
+    "artist": "Richard Brakenburg",
+    "width": 3698,
+    "height": 2794,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108300",
+    "obj_id": "200108300",
+    "iiif_id": "pxakU",
+    "title": "De prins van Oranje bezoekt op 14 februari 1825 in het Aalmoezeniersweeshuis te Amsterdam de slachtoffers van de watersnood",
+    "artist": "Mattheus Ignatius van Bree",
+    "width": 4242,
+    "height": 3394,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108301",
+    "obj_id": "200108301",
+    "iiif_id": "sFpgb",
+    "title": "Jacob worstelt met de engel",
+    "artist": "Bartholomeus Breenbergh (eigenhandig gesigneerd)",
+    "width": 7676,
+    "height": 5570,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108307",
+    "obj_id": "200108307",
+    "iiif_id": "DBLqH",
+    "title": "The Rokin, Amsterdam",
+    "artist": "George Hendrik Breitner (mentioned on object)",
+    "width": 3394,
+    "height": 2794,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108309",
+    "obj_id": "200108309",
+    "iiif_id": "xIbrN",
+    "title": "Afbraak van de Grand Bazar de la Bourse aan de Nieuwendijk te Amsterdam.",
+    "artist": "George Hendrik Breitner (mentioned on object)",
+    "width": 3856,
+    "height": 3112,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108310",
+    "obj_id": "200108310",
+    "iiif_id": "kPAhS",
+    "title": "Winter in Amsterdam",
+    "artist": "George Hendrik Breitner",
+    "width": 5086,
+    "height": 2666,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108311",
+    "obj_id": "200108311",
+    "iiif_id": "QTbsl",
+    "title": "Pakhuizen aan de Teertuinen op het Prinseneiland te Amsterdam",
+    "artist": "George Hendrik Breitner",
+    "width": 3742,
+    "height": 3082,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108312",
+    "obj_id": "200108312",
+    "iiif_id": "CsHyH",
+    "title": "Het Rokin te Amsterdam",
+    "artist": "George Hendrik Breitner",
+    "width": 3860,
+    "height": 2824,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108313",
+    "obj_id": "200108313",
+    "iiif_id": "pcOPg",
+    "title": "The Leidsegracht, Amsterdam",
+    "artist": "George Hendrik Breitner (vermeld op object)",
+    "width": 3860,
+    "height": 2852,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108316",
+    "obj_id": "200108316",
+    "iiif_id": "UKMgl",
+    "title": "Building Site in Amsterdam",
+    "artist": "George Hendrik Breitner",
+    "width": 4032,
+    "height": 2290,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108317",
+    "obj_id": "200108317",
+    "iiif_id": "RXguV",
+    "title": "De Singelbrug bij de Paleisstraat te Amsterdam",
+    "artist": "George Hendrik Breitner (vermeld op object)",
+    "width": 5805,
+    "height": 3825,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108319",
+    "obj_id": "200108319",
+    "iiif_id": "Jbhct",
+    "title": "Amsterdams Stadsgezicht",
+    "artist": "George Hendrik Breitner (vermeld op object)",
+    "width": 3820,
+    "height": 2818,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108352",
+    "obj_id": "200108352",
+    "iiif_id": "Lamtm",
+    "title": "The Cattle Ferry",
+    "artist": "Esaias van de Velde",
+    "width": 5916,
+    "height": 3999,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108353",
+    "obj_id": "200108353",
+    "iiif_id": "pHjfW",
+    "title": "Deksel van een klavecimbel",
+    "artist": "copy after Gerard van der Horst",
+    "width": 7292,
+    "height": 3360,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108354",
+    "obj_id": "200108354",
+    "iiif_id": "YTVgN",
+    "title": "De zeeslag tegen de Spaanse Armada bij Duins, 21 oktober 1639",
+    "artist": "Willem van de Velde (I)",
+    "width": 6214,
+    "height": 3979,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108355",
+    "obj_id": "200108355",
+    "iiif_id": "cOyAv",
+    "title": "De zeeslag bij Terheide, 10 augustus 1653: episode uit de Eerste Engelse Zeeoorlog (1652-54)",
+    "artist": "Willem van de Velde (I)",
+    "width": 7511,
+    "height": 4422,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108356",
+    "obj_id": "200108356",
+    "iiif_id": "vWrNx",
+    "title": "Episode uit de slag in het Sont tussen de Hollandse en Zweedse vloot, 8 november 1658",
+    "artist": "Willem van de Velde (I)",
+    "width": 6335,
+    "height": 4315,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108357",
+    "obj_id": "200108357",
+    "iiif_id": "FUmRx",
+    "title": "\"Sea Battle between Cornelis Tromp on the \"\"Gouden Leeuw\"\" and Sir Edward Spragg on the \"\"Royal Prince\"\" during the Battle at Kijkduin (Battle of Texel), 21 August 1673: episode from the Third Anglo-Dutch War\"",
+    "artist": "Willem van de Velde (II)",
+    "width": 6797,
+    "height": 3986,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108358",
+    "obj_id": "200108358",
+    "iiif_id": "YtpJy",
+    "title": "De verovering van het Engelse admiraalsschip de 'Royal Prince' 13 juni 1666, tijdens de Vierdaagse Zeeslag, 11-14 juni 1666: episode uit de Tweede Engelse Zeeoorlog (1665-67)",
+    "artist": "Willem van de Velde (II)",
+    "width": 7362,
+    "height": 5273,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108365",
+    "obj_id": "200108365",
+    "iiif_id": "fGLky",
+    "title": "Landscape with Figures and a Village Fair (Village Kermesse)",
+    "artist": "Adriaen Pietersz van de Venne",
+    "width": 6520,
+    "height": 3838,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108366",
+    "obj_id": "200108366",
+    "iiif_id": "MDQch",
+    "title": "Stadhouder prins Maurits op zijn praalbed",
+    "artist": "Adriaen Pietersz van de Venne",
+    "width": 5935,
+    "height": 3532,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108367",
+    "obj_id": "200108367",
+    "iiif_id": "qGZVJ",
+    "title": "The Departure of a Dignitary from Middelburg",
+    "artist": "Adriaen Pietersz van de Venne",
+    "width": 6216,
+    "height": 2995,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108368",
+    "obj_id": "200108368",
+    "iiif_id": "SPtCC",
+    "title": "De prinsen van Oranje Maurits en Frederik Hendrik op de paardenmarkt te Valkenburg",
+    "artist": "Adriaen Pietersz van de Venne",
+    "width": 6391,
+    "height": 2506,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108373",
+    "obj_id": "200108373",
+    "iiif_id": "crXuY",
+    "title": "The calling of St John during the marriage at Cana",
+    "artist": "Jan Cornelisz. Vermeyen",
+    "width": 6305,
+    "height": 4937,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108376",
+    "obj_id": "200108376",
+    "iiif_id": "jhOxY",
+    "title": "De aankomst van koning Karel II van Engeland te Rotterdam, 24 mei 1660",
+    "artist": "Lieve Pietersz. Verschuier",
+    "width": 7508,
+    "height": 4013,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108378",
+    "obj_id": "200108378",
+    "iiif_id": "cPppu",
+    "title": "Portret van Cornelia, Clara en Johanna Veth",
+    "artist": "Jan Veth",
+    "width": 5933,
+    "height": 4743,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108380",
+    "obj_id": "200108380",
+    "iiif_id": "vjXyn",
+    "title": "De groentewinkel 'De Buyskool'",
+    "artist": "Jan Victors (mentioned on object)",
+    "width": 5612,
+    "height": 4609,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108382",
+    "obj_id": "200108382",
+    "iiif_id": "hgyAA",
+    "title": "De varkensslachter",
+    "artist": "Jan Victors",
+    "width": 5936,
+    "height": 4711,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108384",
+    "obj_id": "200108384",
+    "iiif_id": "odYYZ",
+    "title": "The Battle of the Slaak between the Dutch and Spanish Fleets on the Night of 12-13 September",
+    "artist": "Simon de Vlieger (eigenhandig gesigneerd)",
+    "width": 6360,
+    "height": 3694,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108385",
+    "obj_id": "200108385",
+    "iiif_id": "FDLZM",
+    "title": "Italian Landscape with Umbrella Pines",
+    "artist": "Hendrik Voogd",
+    "width": 7086,
+    "height": 5116,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108386",
+    "obj_id": "200108386",
+    "iiif_id": "TwvEJ",
+    "title": "Italiaans landschap met pijnbomen",
+    "artist": "Hendrik Voogd",
+    "width": 6682,
+    "height": 5338,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108389",
+    "obj_id": "200108389",
+    "iiif_id": "HNYHv",
+    "title": "Market Day in a Flemish Town",
+    "artist": "Sebastiaen Vrancx",
+    "width": 5891,
+    "height": 4451,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108390",
+    "obj_id": "200108390",
+    "iiif_id": "uQhEg",
+    "title": "Oost-Indiëvaarders voor de kust",
+    "artist": "Hendrik Cornelisz. Vroom (eigenhandig gesigneerd)",
+    "width": 7507,
+    "height": 3934,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108391",
+    "obj_id": "200108391",
+    "iiif_id": "AXBXD",
+    "title": "Battle of Gibraltar in 1607",
+    "artist": "Cornelis Claesz van Wieringen",
+    "width": 6225,
+    "height": 4471,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108392",
+    "obj_id": "200108392",
+    "iiif_id": "YjPzK",
+    "title": "Gevecht tussen Hollandse en Spaanse schepen op het Haarlemmermeer, 26 mei 1573",
+    "artist": "Hendrik Cornelisz. Vroom (eigenhandig gesigneerd)",
+    "width": 5996,
+    "height": 4203,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108393",
+    "obj_id": "200108393",
+    "iiif_id": "BjQua",
+    "title": "The Death of Epaminondas",
+    "artist": "Isaac Walraven",
+    "width": 6560,
+    "height": 4939,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108394",
+    "obj_id": "200108394",
+    "iiif_id": "oZLfA",
+    "title": "Bosgezicht nabij Barbizon",
+    "artist": "Johan Hendrik Weissenbruch",
+    "width": 5881,
+    "height": 4388,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108395",
+    "obj_id": "200108395",
+    "iiif_id": "FfKEF",
+    "title": "Zomerdag",
+    "artist": "Johan Hendrik Weissenbruch (mentioned on object)",
+    "width": 6007,
+    "height": 3754,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108396",
+    "obj_id": "200108396",
+    "iiif_id": "HTuyN",
+    "title": "Herfstlandschap",
+    "artist": "Johan Hendrik Weissenbruch (mentioned on object)",
+    "width": 6463,
+    "height": 3992,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108397",
+    "obj_id": "200108397",
+    "iiif_id": "FogPx",
+    "title": "Cellar of the Artist’s Home in The Hague",
+    "artist": "Johan Hendrik Weissenbruch (vermeld op object)",
+    "width": 6821,
+    "height": 5214,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108398",
+    "obj_id": "200108398",
+    "iiif_id": "GQOcv",
+    "title": "De Trekvliet bij Rijswijk, bekend als ‘Gezicht bij de Geestbrug’",
+    "artist": "Johan Hendrik Weissenbruch (mentioned on object)",
+    "width": 6005,
+    "height": 3634,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108401",
+    "obj_id": "200108401",
+    "iiif_id": "pQJnQ",
+    "title": "Amor Kissing Venus",
+    "artist": "manner of Adriaen van der Werff",
+    "width": 3878,
+    "height": 2702,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108402",
+    "obj_id": "200108402",
+    "iiif_id": "QvOfM",
+    "title": "Hilly Landscape with a Rider on a Country Road",
+    "artist": "Jan Wijnants",
+    "width": 6296,
+    "height": 4954,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108403",
+    "obj_id": "200108403",
+    "iiif_id": "HpMZN",
+    "title": "Ships off a Rocky Coast",
+    "artist": "Adam Willaerts (signed by artist)",
+    "width": 3900,
+    "height": 1932,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108404",
+    "obj_id": "200108404",
+    "iiif_id": "BMwns",
+    "title": "Schipbreuk op een rotsachtige kust",
+    "artist": "Adam Willaerts (eigenhandig gesigneerd)",
+    "width": 11085,
+    "height": 8284,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108410",
+    "obj_id": "200108410",
+    "iiif_id": "RLTtp",
+    "title": "Landscape with a Sandy Path",
+    "artist": "Philips Wouwerman (vermeld op object)",
+    "width": 5666,
+    "height": 4306,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108413",
+    "obj_id": "200108413",
+    "iiif_id": "vEyGr",
+    "title": "Farmyard",
+    "artist": "anonymous",
+    "width": 5918,
+    "height": 4195,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108416",
+    "obj_id": "200108416",
+    "iiif_id": "RmEHx",
+    "title": "Landschap met baders",
+    "artist": "Joris van der Haagen, Nicolaes Pietersz. Berchem",
+    "width": 5738,
+    "height": 4661,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108419",
+    "obj_id": "200108419",
+    "iiif_id": "hWdVc",
+    "title": "Poor Folk Drinking in a Tavern",
+    "artist": "Adriaen Brouwer",
+    "width": 6216,
+    "height": 4509,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108420",
+    "obj_id": "200108420",
+    "iiif_id": "Hferv",
+    "title": "Vechtende kaartspelers bij een herberg",
+    "artist": "Adriaen Brouwer",
+    "width": 5887,
+    "height": 4441,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108429",
+    "obj_id": "200108429",
+    "iiif_id": "vkmJW",
+    "title": "Allegorie op de troonsafstand van keizer Karel V",
+    "artist": "Frans Francken (II)",
+    "width": 7367,
+    "height": 5724,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108432",
+    "obj_id": "200108432",
+    "iiif_id": "TLbzE",
+    "title": "Italiaans landschap bij zonsondergang",
+    "artist": "Willem de Heusch",
+    "width": 6037,
+    "height": 4546,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108433",
+    "obj_id": "200108433",
+    "iiif_id": "yVSAk",
+    "title": "Italiaans landschap met herders",
+    "artist": "Willem de Heusch",
+    "width": 6126,
+    "height": 4588,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108439",
+    "obj_id": "200108439",
+    "iiif_id": "maReD",
+    "title": "Eenden",
+    "artist": "Melchior d' Hondecoeter",
+    "width": 5334,
+    "height": 4250,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108441",
+    "obj_id": "200108441",
+    "iiif_id": "HpSUb",
+    "title": "Ruitergevecht",
+    "artist": "Jan van Huchtenburg",
+    "width": 6594,
+    "height": 5176,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108442",
+    "obj_id": "200108442",
+    "iiif_id": "zcDAe",
+    "title": "Arcadian Landscape with Fishermen",
+    "artist": "Jan van Huysum",
+    "width": 7014,
+    "height": 5814,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108443",
+    "obj_id": "200108443",
+    "iiif_id": "fkDMc",
+    "title": "Arcadisch landschap met een offerfeest",
+    "artist": "Jan van Huysum",
+    "width": 6838,
+    "height": 5675,
+    "is_landscape": true
+  },
+  {
+    "lod_id": "https://id.rijksmuseum.nl/200108445",
+    "obj_id": "200108445",
+    "iiif_id": "oEuNT",
+    "title": "Muilezeldrijvers bij een herberg",
+    "artist": "Karel du Jardin",
+    "width": 3904,
+    "height": 2957,
+    "is_landscape": true
+  }
+]

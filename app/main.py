@@ -30,6 +30,16 @@ async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Copy seed data on first run (from Docker image to persistent volume)
+    seed_dir = Path("/app/data-seed")
+    if seed_dir.exists() and not INDEX_FILE.exists():
+        import shutil
+        for f in seed_dir.iterdir():
+            dest = DATA_DIR / f.name
+            if not dest.exists():
+                shutil.copy2(f, dest)
+                log.info(f"Seeded {f.name}")
+
     # Build index on first run if it doesn't exist
     if not INDEX_FILE.exists():
         log.info("No Rijksmuseum index found, building initial index (5 pages)...")

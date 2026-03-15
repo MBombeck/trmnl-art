@@ -9,6 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app
 COPY app/ app/
 
+# Seed data (Rijksmuseum index) - copied to data dir on first run
+COPY data-seed/ /app/data-seed/
+
 # Data directory (mount as volume for persistence)
 RUN mkdir -p /app/data
 
