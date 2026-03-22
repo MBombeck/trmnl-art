@@ -6,3 +6,4 @@ data/
 *.png
 .venv/
 !data-seed/
+!data-seed/**

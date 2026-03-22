@@ -9,11 +9,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app
 COPY app/ app/
 
-# Seed data (Rijksmuseum index) - copied to data dir on first run
+# Seed data (Rijksmuseum index + goat gallery) - copied to data dir on first run
 COPY data-seed/ /app/data-seed/
 
 # Data directory (mount as volume for persistence)
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data /app/data/goat-gallery
 
 EXPOSE 8000
 
