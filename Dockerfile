@@ -6,8 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app
+# Copy app + batch generator
 COPY app/ app/
+COPY generate_batch.py .
 
 # Seed data (Rijksmuseum index + goat gallery) - copied to data dir on first run
 COPY data-seed/ /app/data-seed/
