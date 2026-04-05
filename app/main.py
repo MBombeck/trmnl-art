@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app.config import ART_SOURCE, CURRENT_IMAGE, DATA_DIR, GOAT_GALLERY_DIR, INDEX_FILE
 from app.scheduler import get_status, run_goat_art, run_nasa, run_rijksmuseum, start_scheduler
@@ -170,6 +170,50 @@ async def status():
     base_status = get_status()
     base_status["goat_gallery_count"] = gallery_count
     return base_status
+
+
+@app.get("/gallery/{filename}")
+async def gallery_image(filename: str):
+    """Serve a single gallery image."""
+    path = GOAT_GALLERY_DIR / filename
+    if not path.exists() or not path.suffix == ".png":
+        return JSONResponse({"error": "Image not found"}, status_code=404)
+    return FileResponse(path, media_type="image/png")
+
+
+@app.get("/gallery", response_class=HTMLResponse)
+async def gallery():
+    """Browse all goat art gallery images."""
+    images = sorted(GOAT_GALLERY_DIR.glob("*.png"))
+    cards = ""
+    for img in images:
+        name = img.stem.replace("_", " ").title()
+        kb = img.stat().st_size / 1024
+        cards += f'''<div class="card">
+            <img src="/gallery/{img.name}" loading="lazy" onclick="this.classList.toggle('zoomed')">
+            <div class="label">{name} <span>({kb:.0f} KB)</span></div>
+        </div>\n'''
+
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Goat Art Gallery ({len(images)} images)</title>
+<style>
+    * {{ margin:0; padding:0; box-sizing:border-box; }}
+    body {{ background:#1a1a2e; color:#e0e0e0; font-family:system-ui,sans-serif; padding:20px; }}
+    h1 {{ text-align:center; margin-bottom:8px; color:#f0c040; font-size:1.8rem; }}
+    .subtitle {{ text-align:center; color:#888; margin-bottom:24px; }}
+    .grid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:16px; }}
+    .card {{ background:#16213e; border-radius:12px; overflow:hidden; transition:transform .2s; }}
+    .card:hover {{ transform:scale(1.02); }}
+    .card img {{ width:100%; display:block; cursor:pointer; transition:all .3s; }}
+    .card img.zoomed {{ position:fixed; top:0; left:0; width:100vw; height:100vh; object-fit:contain; z-index:999; background:#000; border-radius:0; }}
+    .label {{ padding:8px 12px; font-size:.85rem; }}
+    .label span {{ color:#666; }}
+</style></head><body>
+<h1>Goat Art Gallery</h1>
+<p class="subtitle">{len(images)} Bilder &middot; 800&times;480 &middot; BWRY optimiert &middot; Click to zoom</p>
+<div class="grid">{cards}</div>
+</body></html>"""
 
 
 @app.get("/api/build-index")
