@@ -1,10 +1,10 @@
-"""E-ink image processing pipeline.
+"""Image processing pipeline for TRMNL BWRY (4-color) display.
 
-Optimizes photographs for 800x480 e-ink display with proper dithering,
-contrast enhancement, and dark image compensation.
+Prepares high-quality full-color PNGs for the TRMNL server, which handles
+palette conversion to BWRY (black, white, red, yellow) itself.
 
-Based on TRMNL byos_fastapi PhotographicPlugin grading chain:
-  autocontrast -> gamma -> shadow boost -> brightness -> autocontrast
+Pipeline:
+  resize -> autocontrast -> shadow boost -> contrast -> unsharp mask -> saturation boost
 """
 
 import logging
@@ -17,12 +17,12 @@ from app.config import DISPLAY_HEIGHT, DISPLAY_WIDTH
 
 log = logging.getLogger("trmnl-art.processing")
 
-# E-ink 2-bit grayscale palette (4 shades)
-EINK_PALETTE_2BIT = [0x00, 0x55, 0xAA, 0xFF]
+# Max output size in bytes (1 MB)
+MAX_OUTPUT_BYTES = 1_000_000
 
 
 def analyze_brightness(img: Image.Image) -> dict:
-    """Analyze image brightness and contrast for e-ink viability."""
+    """Analyze image brightness and contrast for processing decisions."""
     gray = img.convert("L")
     stat = ImageStat.Stat(gray)
     hist = gray.histogram()
@@ -50,7 +50,7 @@ def resize_cover(img: Image.Image, width: int = DISPLAY_WIDTH, height: int = DIS
 
 
 def boost_shadows(img: Image.Image, pivot: int = 180, shadow_gamma: float = 0.65) -> Image.Image:
-    """Lift shadows while preserving highlights. From TRMNL PhotographicPlugin."""
+    """Lift shadows while preserving highlights (operates on RGB)."""
     arr = np.array(img, dtype=np.float64)
     mask = arr < pivot
     arr[mask] = ((arr[mask] / pivot) ** shadow_gamma) * pivot
@@ -64,93 +64,54 @@ def apply_gamma(img: Image.Image, gamma: float) -> Image.Image:
     return Image.fromarray((arr * 255).astype(np.uint8))
 
 
-def grade_for_eink(img: Image.Image) -> Image.Image:
-    """Full TRMNL-style photographic grading pipeline.
+def grade_for_display(img: Image.Image) -> Image.Image:
+    """Full-color grading pipeline optimized for BWRY display.
 
-    Pipeline (from byos_fastapi PhotographicPlugin):
-    1. autocontrast (clip 0.05% tails)
-    2. gamma 1.2 (brighten midtones)
-    3. shadow boost (pivot=180, gamma=0.65)
-    4. brightness +10%
-    5. final autocontrast
+    Pipeline:
+    1. Dark image compensation (gamma)
+    2. Autocontrast (clip 0.05% tails)
+    3. Shadow boost (pivot=180, gamma=0.65)
+    4. Contrast +15%
+    5. Unsharp mask (preserve detail)
+    6. Color saturation +20% (makes reds and yellows pop on BWRY)
     """
-    gray = img.convert("L")
     analysis = analyze_brightness(img)
 
     # For very dark images, apply aggressive gamma first
     if analysis["is_very_dark"]:
         log.info(f"Very dark image (mean={analysis['mean_brightness']:.0f}), applying gamma=0.45")
-        gray = apply_gamma(gray, 0.45)
+        img = apply_gamma(img, 0.45)
     elif analysis["is_dark"]:
         log.info(f"Dark image (mean={analysis['mean_brightness']:.0f}), applying gamma=0.6")
-        gray = apply_gamma(gray, 0.6)
+        img = apply_gamma(img, 0.6)
 
     # Step 1: autocontrast
-    gray = ImageOps.autocontrast(gray, cutoff=0.05)
+    img = ImageOps.autocontrast(img, cutoff=0.05)
 
-    # Step 2: gamma 1.2 (slight brighten)
-    gray = apply_gamma(gray, 1 / 1.2)
+    # Step 2: shadow boost
+    img = boost_shadows(img, pivot=180, shadow_gamma=0.65)
 
-    # Step 3: shadow boost
-    gray = boost_shadows(gray, pivot=180, shadow_gamma=0.65)
+    # Step 3: contrast +15%
+    img = ImageEnhance.Contrast(img).enhance(1.15)
 
-    # Step 4: brightness +10%
-    gray = ImageEnhance.Brightness(gray).enhance(1.1)
+    # Step 4: sharpen to preserve detail
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=100, threshold=2))
 
-    # Step 5: final autocontrast
-    gray = ImageOps.autocontrast(gray, cutoff=0.05)
+    # Step 5: boost color saturation +20% (reds/yellows pop on BWRY)
+    img = ImageEnhance.Color(img).enhance(1.20)
 
-    # Extra: sharpen to preserve detail before dithering
-    gray = gray.filter(ImageFilter.UnsharpMask(radius=1.5, percent=100, threshold=2))
-
-    return gray
-
-
-def dither_floyd_steinberg(gray: Image.Image) -> Image.Image:
-    """Apply Floyd-Steinberg dithering to produce 1-bit output."""
-    return gray.convert("1")
-
-
-def quantize_2bit(gray: Image.Image) -> Image.Image:
-    """Quantize to 4-level grayscale with Floyd-Steinberg error diffusion.
-
-    Uses manual Floyd-Steinberg since Pillow's quantize() doesn't handle
-    small grayscale palettes well (maps most pixels to black).
-    """
-    levels = np.array(EINK_PALETTE_2BIT, dtype=np.float64)
-    arr = np.array(gray, dtype=np.float64)
-    h, w = arr.shape
-
-    for y in range(h):
-        for x in range(w):
-            old_val = arr[y, x]
-            # Find nearest palette level
-            new_val = float(levels[np.argmin(np.abs(levels - old_val))])
-            arr[y, x] = new_val
-            err = old_val - new_val
-
-            # Floyd-Steinberg error diffusion
-            if x + 1 < w:
-                arr[y, x + 1] += err * 7 / 16
-            if y + 1 < h:
-                if x - 1 >= 0:
-                    arr[y + 1, x - 1] += err * 3 / 16
-                arr[y + 1, x] += err * 5 / 16
-                if x + 1 < w:
-                    arr[y + 1, x + 1] += err * 1 / 16
-
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+    return img
 
 
 def process_image(img_data: bytes, use_2bit: bool = True) -> tuple[bytes, dict]:
-    """Full pipeline: raw image bytes -> e-ink optimized PNG bytes.
+    """Full pipeline: raw image bytes -> display-optimized PNG bytes.
 
     Args:
         img_data: Raw image bytes (JPEG, PNG, etc.)
-        use_2bit: If True, produce 4-level grayscale. If False, 1-bit dithered.
+        use_2bit: Legacy parameter, ignored. Full-color output always.
 
     Returns:
-        Tuple of (processed PNG bytes, analysis dict)
+        Tuple of (processed image bytes, analysis dict)
     """
     img = Image.open(BytesIO(img_data)).convert("RGB")
     analysis = analyze_brightness(img)
@@ -158,25 +119,26 @@ def process_image(img_data: bytes, use_2bit: bool = True) -> tuple[bytes, dict]:
     # Resize to display dimensions
     img = resize_cover(img)
 
-    # Grade for e-ink
-    gray = grade_for_eink(img)
-
-    # Dither/quantize
-    if use_2bit:
-        result = quantize_2bit(gray)
-    else:
-        result = dither_floyd_steinberg(gray).convert("L")
+    # Grade for display (full-color)
+    result = grade_for_display(img)
 
     # Save as optimized PNG
     buf = BytesIO()
     result.save(buf, format="PNG", optimize=True)
-    png_bytes = buf.getvalue()
+    out_bytes = buf.getvalue()
+
+    # If PNG exceeds 1 MB, fall back to high-quality JPEG
+    if len(out_bytes) > MAX_OUTPUT_BYTES:
+        log.info(f"PNG too large ({len(out_bytes)/1024:.0f} KB), converting to JPEG q=90")
+        buf = BytesIO()
+        result.save(buf, format="JPEG", quality=90, optimize=True)
+        out_bytes = buf.getvalue()
 
     log.info(
-        f"Processed image: {img.size} -> {result.size}, "
-        f"{'2-bit' if use_2bit else '1-bit'}, "
-        f"{len(png_bytes)/1024:.0f} KB, "
+        f"Processed image: {result.size}, "
+        f"full-color, "
+        f"{len(out_bytes)/1024:.0f} KB, "
         f"brightness={analysis['mean_brightness']:.0f}"
     )
 
-    return png_bytes, analysis
+    return out_bytes, analysis
