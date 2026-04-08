@@ -14,7 +14,7 @@ COPY generate_batch.py .
 COPY data-seed/ /app/data-seed/
 
 # Data directory (mount as volume for persistence)
-RUN mkdir -p /app/data /app/data/goat-gallery
+RUN mkdir -p /app/data /app/data/goat-gallery /app/data/rijksmuseum-gallery /app/data/nasa-gallery
 
 EXPOSE 8000
 

@@ -1,6 +1,7 @@
 """Job scheduler with self-healing retry logic."""
 
 import logging
+import re
 import time
 from datetime import datetime
 
@@ -21,6 +22,7 @@ from app.config import (
     RIJKSMUSEUM_CRON_MINUTE,
     TIMEZONE,
 )
+from app.gallery import save_image
 from app.processing import process_image
 from app.sources import fetch_nasa_image, fetch_rijksmuseum_image
 from app.trmnl import push_to_trmnl
@@ -33,6 +35,16 @@ job_status = {
     "nasa": {"last_run": None, "last_success": None, "last_error": None, "retries": 0},
     "goat-art": {"last_run": None, "last_success": None, "last_error": None, "retries": 0},
 }
+
+
+def _make_gallery_filename(description: str) -> str:
+    """Convert description to a safe, unique filename."""
+    name = re.sub(r'[^\w\s-]', '', description.lower())
+    name = re.sub(r'[\s-]+', '_', name).strip('_')
+    if not name:
+        name = "image"
+    date_suffix = datetime.now().strftime('%Y%m%d')
+    return f"{name}_{date_suffix}.png"
 
 
 def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool = False):
@@ -56,6 +68,13 @@ def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool
         # Save as current image
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         CURRENT_IMAGE.write_bytes(png_bytes)
+
+        # Persist to source gallery
+        try:
+            gallery_fn = _make_gallery_filename(description)
+            save_image(source, gallery_fn, png_bytes, description)
+        except Exception as e:
+            log.warning(f"Failed to save to gallery: {e}")
 
         # Push to TRMNL
         if not push_to_trmnl(description):

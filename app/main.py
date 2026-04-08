@@ -9,11 +9,21 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app.config import ART_SOURCE, CURRENT_IMAGE, DATA_DIR, GOAT_GALLERY_DIR, INDEX_FILE
+from app.gallery import (
+    GALLERY_DIRS,
+    SOURCES,
+    delete_image,
+    ensure_dirs,
+    get_counts,
+    get_image_path,
+    list_images,
+)
 from app.scheduler import get_status, run_goat_art, run_nasa, run_rijksmuseum, start_scheduler
+from app.templates import render_dashboard, render_gallery
 
 # Logging
 logging.basicConfig(
@@ -23,12 +33,16 @@ logging.basicConfig(
 )
 log = logging.getLogger("trmnl-art")
 
+# Runtime-switchable source (starts from env config)
+_runtime_source = ART_SOURCE
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     GOAT_GALLERY_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_dirs()
 
     # Copy seed data on first run (from Docker image to persistent volume)
     seed_dir = Path("/app/data-seed")
@@ -82,9 +96,99 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="TRMNL Art Display",
     description="Serves e-ink optimized art to TRMNL display",
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
+
+
+# --- Dashboard ---
+
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard():
+    """Dashboard — overview and controls."""
+    status = get_status()
+    counts = get_counts()
+    return render_dashboard(status, counts)
+
+
+# --- Gallery UI ---
+
+
+@app.get("/gallery", response_class=HTMLResponse)
+async def gallery(source: str = "all"):
+    """Gallery — browse all images with source filter."""
+    if source != "all" and source not in SOURCES:
+        source = "all"
+    images = list_images(source if source != "all" else None)
+    counts = get_counts()
+    return render_gallery(images, counts, source)
+
+
+# --- Gallery API ---
+
+
+@app.get("/api/galleries")
+async def api_galleries():
+    """List all gallery images grouped by source."""
+    images = list_images()
+    counts = get_counts()
+    return {"images": images, "counts": counts}
+
+
+@app.get("/api/galleries/{source}")
+async def api_gallery_source(source: str):
+    """List images for a single source."""
+    if source not in SOURCES:
+        return JSONResponse({"error": f"Unknown source: {source}"}, status_code=404)
+    images = list_images(source)
+    return {"source": source, "count": len(images), "images": images}
+
+
+@app.get("/api/galleries/{source}/{filename}")
+async def api_gallery_image(source: str, filename: str):
+    """Serve a single gallery image."""
+    path = get_image_path(source, filename)
+    if not path:
+        return JSONResponse({"error": "Image not found"}, status_code=404)
+    return FileResponse(path, media_type="image/png")
+
+
+@app.delete("/api/galleries/{source}/{filename}")
+async def api_gallery_delete(source: str, filename: str):
+    """Delete a single gallery image."""
+    if delete_image(source, filename):
+        return {"status": "ok", "message": f"Deleted {filename} from {source}"}
+    return JSONResponse({"error": "Image not found"}, status_code=404)
+
+
+# --- Source switching ---
+
+
+@app.get("/api/source")
+async def api_get_source():
+    """Get current art source."""
+    global _runtime_source
+    return {"source": _runtime_source}
+
+
+@app.post("/api/source")
+async def api_set_source(request: Request):
+    """Switch art source at runtime."""
+    global _runtime_source
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+    new_source = body.get("source", "")
+    if new_source not in SOURCES:
+        return JSONResponse({"error": f"Unknown source: {new_source}"}, status_code=400)
+    _runtime_source = new_source
+    log.info(f"Art source switched to: {new_source}")
+    return {"status": "ok", "source": new_source}
+
+
+# --- Existing endpoints ---
 
 
 @app.get("/current.png")
@@ -120,14 +224,15 @@ async def health():
 @app.get("/api/next")
 async def next_image():
     """Push the next image based on configured art source."""
-    if ART_SOURCE == "goat-art":
-        from app.goat_art import force_push
+    global _runtime_source
+    source = _runtime_source
+    if source == "goat-art":
         run_goat_art_force()
         return {"status": "ok", "source": "goat-art", "message": "New goat art pushed"}
-    elif ART_SOURCE == "nasa":
+    elif source == "nasa":
         run_nasa()
         return {"status": "ok", "source": "nasa", "message": "NASA APOD pushed"}
-    elif ART_SOURCE == "rijksmuseum":
+    elif source == "rijksmuseum":
         run_rijksmuseum()
         return {"status": "ok", "source": "rijksmuseum", "message": "Rijksmuseum painting pushed"}
     else:
@@ -166,54 +271,12 @@ async def push_nasa():
 @app.get("/api/status")
 async def status():
     """Get detailed status information."""
-    gallery_count = len(list(GOAT_GALLERY_DIR.glob("*.png"))) if GOAT_GALLERY_DIR.exists() else 0
+    global _runtime_source
+    counts = get_counts()
     base_status = get_status()
-    base_status["goat_gallery_count"] = gallery_count
+    base_status["art_source"] = _runtime_source
+    base_status["gallery_counts"] = counts
     return base_status
-
-
-@app.get("/gallery/{filename}")
-async def gallery_image(filename: str):
-    """Serve a single gallery image."""
-    path = GOAT_GALLERY_DIR / filename
-    if not path.exists() or not path.suffix == ".png":
-        return JSONResponse({"error": "Image not found"}, status_code=404)
-    return FileResponse(path, media_type="image/png")
-
-
-@app.get("/gallery", response_class=HTMLResponse)
-async def gallery():
-    """Browse all goat art gallery images."""
-    images = sorted(GOAT_GALLERY_DIR.glob("*.png"))
-    cards = ""
-    for img in images:
-        name = img.stem.replace("_", " ").title()
-        kb = img.stat().st_size / 1024
-        cards += f'''<div class="card">
-            <img src="/gallery/{img.name}" loading="lazy" onclick="this.classList.toggle('zoomed')">
-            <div class="label">{name} <span>({kb:.0f} KB)</span></div>
-        </div>\n'''
-
-    return f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Goat Art Gallery ({len(images)} images)</title>
-<style>
-    * {{ margin:0; padding:0; box-sizing:border-box; }}
-    body {{ background:#1a1a2e; color:#e0e0e0; font-family:system-ui,sans-serif; padding:20px; }}
-    h1 {{ text-align:center; margin-bottom:8px; color:#f0c040; font-size:1.8rem; }}
-    .subtitle {{ text-align:center; color:#888; margin-bottom:24px; }}
-    .grid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:16px; }}
-    .card {{ background:#16213e; border-radius:12px; overflow:hidden; transition:transform .2s; }}
-    .card:hover {{ transform:scale(1.02); }}
-    .card img {{ width:100%; display:block; cursor:pointer; transition:all .3s; }}
-    .card img.zoomed {{ position:fixed; top:0; left:0; width:100vw; height:100vh; object-fit:contain; z-index:999; background:#000; border-radius:0; }}
-    .label {{ padding:8px 12px; font-size:.85rem; }}
-    .label span {{ color:#666; }}
-</style></head><body>
-<h1>Goat Art Gallery</h1>
-<p class="subtitle">{len(images)} Bilder &middot; 800&times;480 &middot; BWRY optimiert &middot; Click to zoom</p>
-<div class="grid">{cards}</div>
-</body></html>"""
 
 
 @app.get("/api/build-index")
