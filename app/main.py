@@ -224,19 +224,20 @@ async def health():
 @app.get("/api/next")
 async def next_image():
     """Push the next image based on configured art source."""
+    import asyncio
     global _runtime_source
     source = _runtime_source
     if source == "goat-art":
-        run_goat_art_force()
+        await asyncio.get_event_loop().run_in_executor(None, run_goat_art_force)
         return {"status": "ok", "source": "goat-art", "message": "New goat art pushed"}
     elif source == "nasa":
-        run_nasa()
+        await asyncio.get_event_loop().run_in_executor(None, run_nasa)
         return {"status": "ok", "source": "nasa", "message": "NASA APOD pushed"}
     elif source == "rijksmuseum":
-        run_rijksmuseum()
+        await asyncio.get_event_loop().run_in_executor(None, run_rijksmuseum)
         return {"status": "ok", "source": "rijksmuseum", "message": "Rijksmuseum painting pushed"}
     else:
-        run_rijksmuseum()
+        await asyncio.get_event_loop().run_in_executor(None, run_rijksmuseum)
         return {"status": "ok", "source": "rijksmuseum", "message": "Rijksmuseum painting pushed"}
 
 
@@ -250,21 +251,24 @@ def run_goat_art_force():
 @app.get("/api/push/goat-art")
 async def push_goat_art():
     """Manually trigger a goat art push (bypasses daily limit)."""
-    run_goat_art_force()
+    import asyncio
+    await asyncio.get_event_loop().run_in_executor(None, run_goat_art_force)
     return {"status": "ok", "message": "Goat art pushed"}
 
 
 @app.get("/api/push/rijksmuseum")
 async def push_rijksmuseum():
     """Manually trigger a Rijksmuseum image push."""
-    run_rijksmuseum()
+    import asyncio
+    await asyncio.get_event_loop().run_in_executor(None, run_rijksmuseum)
     return {"status": "ok", "message": "Rijksmuseum image pushed"}
 
 
 @app.get("/api/push/nasa")
 async def push_nasa():
     """Manually trigger a NASA APOD push."""
-    run_nasa()
+    import asyncio
+    await asyncio.get_event_loop().run_in_executor(None, run_nasa)
     return {"status": "ok", "message": "NASA APOD pushed"}
 
 
@@ -281,7 +285,10 @@ async def status():
 
 @app.get("/api/build-index")
 async def build_index(pages: int = 5):
-    """Rebuild/extend the Rijksmuseum landscape index."""
+    """Rebuild/extend the Rijksmuseum landscape index (runs in background thread)."""
+    import asyncio
     from app.sources import build_rijksmuseum_index
-    index = build_rijksmuseum_index(max_pages=pages)
+
+    loop = asyncio.get_event_loop()
+    index = await loop.run_in_executor(None, lambda: build_rijksmuseum_index(max_pages=pages))
     return {"status": "ok", "total_paintings": len(index)}
