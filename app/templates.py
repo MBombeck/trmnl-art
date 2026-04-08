@@ -473,7 +473,8 @@ def render_dashboard(status: dict, gallery_counts: dict) -> str:
                 <div class="source-selector">
                     <button class="source-btn {"active" if current_source == "goat-art" else ""}" onclick="setSource('goat-art')">Goat Art</button>
                     <button class="source-btn {"active" if current_source == "rijksmuseum" else ""}" onclick="setSource('rijksmuseum')">Rijksmuseum</button>
-                    <button class="source-btn {"active" if current_source == "nasa" else ""}" onclick="setSource('nasa')">NASA APOD</button>
+                    <button class="source-btn {"active" if current_source == "nasa" else ""}" onclick="setSource('nasa')">NASA Space</button>
+                    <button class="source-btn {"active" if current_source == "random" else ""}" onclick="setSource('random')">Random</button>
                 </div>
             </div>
 
@@ -571,9 +572,14 @@ def render_gallery(images: list[dict], counts: dict, source_filter: str = "all")
         <div class="gallery-card fade-up" style="animation-delay:{min(idx * 0.03, 0.6):.2f}s" data-source="{src}">
             <div class="card-img-wrap">
                 <img src="{img['url']}" loading="lazy" alt="{img['title']}" onclick="zoomImage(this)">
-                <button class="card-delete" onclick="deleteImage('{src}', '{img['filename']}', this)" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>
-                </button>
+                <div class="card-actions">
+                    <button class="card-action card-push" onclick="pushImage('{src}', '{img['filename']}', this)" title="Push to TRMNL">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <button class="card-action card-delete" onclick="deleteImage('{src}', '{img['filename']}', this)" title="Delete">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="card-info">
                 <span class="card-title">{img['title']}</span>
@@ -674,10 +680,17 @@ def render_gallery(images: list[dict], counts: dict, source_filter: str = "all")
     }}
     .card-img-wrap:hover img {{ transform: scale(1.02); }}
 
-    .card-delete {{
+    .card-actions {{
         position: absolute;
         top: 10px;
         right: 10px;
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }}
+    .card-img-wrap:hover .card-actions {{ opacity: 1; }}
+    .card-action {{
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -688,11 +701,10 @@ def render_gallery(images: list[dict], counts: dict, source_filter: str = "all")
         display: flex;
         align-items: center;
         justify-content: center;
-        opacity: 0;
         transition: all 0.2s;
         backdrop-filter: blur(4px);
     }}
-    .card-img-wrap:hover .card-delete {{ opacity: 1; }}
+    .card-push:hover {{ background: var(--gold-dim); color: #fff; }}
     .card-delete:hover {{ background: var(--danger); color: #fff; }}
 
     .card-info {{
@@ -816,6 +828,16 @@ function filterGallery(source) {{
     if (source === 'all') url.searchParams.delete('source');
     else url.searchParams.set('source', source);
     history.replaceState(null, '', url);
+}}
+
+async function pushImage(source, filename, btn) {{
+    btn.style.background = 'var(--gold-dim)';
+    btn.style.color = '#fff';
+    try {{
+        const data = await apiCall('/api/galleries/' + source + '/' + filename + '/push', 'POST');
+        toast(data.message || 'Pushed to TRMNL!', 'success');
+    }} catch(e) {{}}
+    setTimeout(() => {{ btn.style.background = ''; btn.style.color = ''; }}, 1500);
 }}
 
 async function deleteImage(source, filename, btn) {{

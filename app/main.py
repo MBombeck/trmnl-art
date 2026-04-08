@@ -163,6 +163,22 @@ async def api_gallery_delete(source: str, filename: str):
     return JSONResponse({"error": "Image not found"}, status_code=404)
 
 
+@app.post("/api/galleries/{source}/{filename}/push")
+async def api_gallery_push(source: str, filename: str):
+    """Push a gallery image directly to TRMNL display."""
+    from app.gallery import _load_meta
+    from app.trmnl import push_to_trmnl
+    path = get_image_path(source, filename)
+    if not path:
+        return JSONResponse({"error": "Image not found"}, status_code=404)
+    # Copy to current.png and push
+    CURRENT_IMAGE.write_bytes(path.read_bytes())
+    meta = _load_meta(path)
+    title = meta.get("title", path.stem.replace("_", " ").title())
+    push_to_trmnl(title)
+    return {"status": "ok", "message": f"Pushed to TRMNL: {title}"}
+
+
 # --- Source switching ---
 
 
@@ -182,7 +198,8 @@ async def api_set_source(request: Request):
     except Exception:
         return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
     new_source = body.get("source", "")
-    if new_source not in SOURCES:
+    valid_sources = list(SOURCES) + ["random"]
+    if new_source not in valid_sources:
         return JSONResponse({"error": f"Unknown source: {new_source}"}, status_code=400)
     _runtime_source = new_source
     log.info(f"Art source switched to: {new_source}")
@@ -226,14 +243,17 @@ async def health():
 async def next_image():
     """Push the next image based on configured art source."""
     import asyncio
+    import random
     global _runtime_source
     source = _runtime_source
+    if source == "random":
+        source = random.choice(["goat-art", "rijksmuseum", "nasa"])
     if source == "goat-art":
         await asyncio.get_event_loop().run_in_executor(None, run_goat_art_force)
         return {"status": "ok", "source": "goat-art", "message": "New goat art pushed"}
     elif source == "nasa":
         await asyncio.get_event_loop().run_in_executor(None, run_nasa)
-        return {"status": "ok", "source": "nasa", "message": "NASA APOD pushed"}
+        return {"status": "ok", "source": "nasa", "message": "NASA space image pushed"}
     elif source == "rijksmuseum":
         await asyncio.get_event_loop().run_in_executor(None, run_rijksmuseum)
         return {"status": "ok", "source": "rijksmuseum", "message": "Rijksmuseum painting pushed"}
