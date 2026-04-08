@@ -207,32 +207,32 @@ def fetch_nasa_image() -> tuple[bytes, str] | None:
     history = load_history()
     shown_dates = set(history.get("nasa", []))
 
+    # Try today's APOD first
     try:
-        # Try today's APOD
         r = requests.get(NASA_APOD_URL, params={"api_key": NASA_API_KEY, "thumbs": "true"}, timeout=15)
         r.raise_for_status()
         apod = r.json()
-
         if apod.get("media_type") == "image" and apod.get("date") not in shown_dates:
             return _download_apod(apod, history)
+        log.info("Today's APOD is video or already shown, trying random...")
+    except Exception as e:
+        log.warning(f"Today's APOD failed ({e}), trying random...")
 
-        # Today is video or already shown — get random
-        log.info("Today's APOD unavailable, fetching random...")
+    # Fallback: get random APODs (always attempted even if today's failed)
+    try:
         r = requests.get(NASA_APOD_URL, params={"api_key": NASA_API_KEY, "count": 10, "thumbs": "true"}, timeout=15)
         r.raise_for_status()
         apods = r.json()
-
         if isinstance(apods, list):
             for apod in apods:
                 if apod.get("media_type") == "image" and apod.get("date") not in shown_dates:
                     return _download_apod(apod, history)
-
-        log.error("No suitable APOD found")
-        return None
-
     except Exception as e:
-        log.error(f"NASA APOD error: {e}")
+        log.error(f"NASA random APOD also failed: {e}")
         return None
+
+    log.error("No suitable APOD found")
+    return None
 
 
 def _download_apod(apod: dict, history: dict) -> tuple[bytes, str] | None:

@@ -16,6 +16,7 @@ import requests
 from PIL import Image
 
 from app.config import DATA_DIR, DISPLAY_HEIGHT, DISPLAY_WIDTH, GEMINI_API_KEY, GOAT_GALLERY_DIR
+from app.gallery import is_blacklisted
 
 log = logging.getLogger("trmnl-art.goat-art")
 
@@ -502,8 +503,11 @@ def fetch_goat_art() -> tuple[bytes, str] | None:
         log.info(f"Already pushed today ({today}), skipping")
         return None
 
-    # Decide: gallery or fresh generation
-    gallery_files = sorted(GOAT_GALLERY_DIR.glob("*.png")) if GOAT_GALLERY_DIR.exists() else []
+    # Decide: gallery or fresh generation (exclude blacklisted)
+    gallery_files = [
+        f for f in sorted(GOAT_GALLERY_DIR.glob("*.png"))
+        if not is_blacklisted("goat-art", f.stem)
+    ] if GOAT_GALLERY_DIR.exists() else []
     use_gallery = True
 
     if GEMINI_API_KEY and random.random() < 0.3:

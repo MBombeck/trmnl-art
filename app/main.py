@@ -55,12 +55,13 @@ async def lifespan(app: FastAPI):
                 shutil.copy2(src, INDEX_FILE)
                 log.info("Seeded rijksmuseum-index.json")
 
-        # Copy goat gallery seed images
+        # Copy goat gallery seed images (skip blacklisted)
+        from app.gallery import is_blacklisted
         goat_seed = seed_dir / "goat-gallery"
         if goat_seed.exists():
             for f in goat_seed.iterdir():
                 dest = GOAT_GALLERY_DIR / f.name
-                if not dest.exists():
+                if not dest.exists() and not is_blacklisted("goat-art", f.stem):
                     shutil.copy2(f, dest)
             count = len(list(GOAT_GALLERY_DIR.glob("*.png")))
             log.info(f"Goat gallery: {count} images")
