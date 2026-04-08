@@ -1,4 +1,4 @@
-"""Image sources: Rijksmuseum and NASA APOD."""
+"""Image sources: Rijksmuseum and NASA Image Library."""
 
 import json
 import logging
@@ -13,14 +13,35 @@ from app.config import (
     HISTORY_FILE,
     INDEX_FILE,
     MIN_LANDSCAPE_RATIO,
-    NASA_API_KEY,
 )
 
 log = logging.getLogger("trmnl-art.sources")
 
 RIJKS_SEARCH_URL = "https://data.rijksmuseum.nl/search/collection"
 IIIF_BASE = "https://iiif.micr.io"
-NASA_APOD_URL = "https://api.nasa.gov/planetary/apod"
+NASA_IMAGES_URL = "https://images-api.nasa.gov/search"
+
+# Search terms that reliably return deep-space imagery
+NASA_SEARCH_QUERIES = [
+    "hubble galaxy",
+    "webb nebula",
+    "james webb deep field",
+    "hubble nebula",
+    "spiral galaxy",
+    "supernova remnant",
+    "planetary nebula",
+    "galaxy cluster",
+    "hubble deep field",
+    "webb galaxy",
+    "andromeda galaxy",
+    "orion nebula",
+    "crab nebula",
+    "eagle nebula pillars",
+    "saturn cassini",
+    "jupiter juno",
+    "mars surface rover",
+    "earth from space",
+]
 
 
 def load_history() -> dict:
@@ -196,61 +217,122 @@ def fetch_rijksmuseum_image() -> tuple[bytes, str] | None:
     return r.content, desc
 
 
-# --- NASA APOD ---
+# --- NASA Image Library ---
 
 
 def fetch_nasa_image() -> tuple[bytes, str] | None:
-    """Get today's NASA APOD or a random unshown one.
+    """Fetch a random deep-space image from NASA Image Library.
 
-    Returns (image_bytes, description) or None.
+    Searches with curated space-related queries and picks an unshown image.
+    No API key required. Returns (image_bytes, description) or None.
     """
     history = load_history()
-    shown_dates = set(history.get("nasa", []))
+    shown_ids = set(history.get("nasa", []))
 
-    # Try today's APOD first
-    try:
-        r = requests.get(NASA_APOD_URL, params={"api_key": NASA_API_KEY, "thumbs": "true"}, timeout=15)
-        r.raise_for_status()
-        apod = r.json()
-        if apod.get("media_type") == "image" and apod.get("date") not in shown_dates:
-            return _download_apod(apod, history)
-        log.info("Today's APOD is video or already shown, trying random...")
-    except Exception as e:
-        log.warning(f"Today's APOD failed ({e}), trying random...")
+    # Pick a random search query
+    query = random.choice(NASA_SEARCH_QUERIES)
 
-    # Fallback: get random APODs (always attempted even if today's failed)
     try:
-        r = requests.get(NASA_APOD_URL, params={"api_key": NASA_API_KEY, "count": 10, "thumbs": "true"}, timeout=15)
+        r = requests.get(
+            NASA_IMAGES_URL,
+            params={"q": query, "media_type": "image", "page_size": 50},
+            timeout=20,
+        )
         r.raise_for_status()
-        apods = r.json()
-        if isinstance(apods, list):
-            for apod in apods:
-                if apod.get("media_type") == "image" and apod.get("date") not in shown_dates:
-                    return _download_apod(apod, history)
+        data = r.json()
     except Exception as e:
-        log.error(f"NASA random APOD also failed: {e}")
+        log.error(f"NASA Image Library search failed: {e}")
         return None
 
-    log.error("No suitable APOD found")
-    return None
+    items = data.get("collection", {}).get("items", [])
+    if not items:
+        log.warning(f"No results for query '{query}'")
+        return None
 
+    # Filter to unshown images that have usable links
+    candidates = []
+    for item in items:
+        item_data = item.get("data", [{}])[0]
+        nasa_id = item_data.get("nasa_id", "")
+        if not nasa_id or nasa_id in shown_ids:
+            continue
+        # Need image links
+        links = item.get("links", [])
+        if not links:
+            continue
+        candidates.append((item_data, links))
 
-def _download_apod(apod: dict, history: dict) -> tuple[bytes, str] | None:
-    """Download an APOD image. Uses standard URL (not hdurl) for reasonable size."""
-    image_url = apod.get("url", "")
-    if not image_url or not image_url.startswith("http"):
+    if not candidates:
+        # All shown for this query — reset history and try again
+        log.info(f"All images shown for '{query}', resetting NASA history")
+        history["nasa"] = []
+        save_history(history)
+        shown_ids = set()
+        candidates = [
+            (item.get("data", [{}])[0], item.get("links", []))
+            for item in items
+            if item.get("links") and item.get("data", [{}])[0].get("nasa_id")
+        ]
+
+    if not candidates:
+        log.error("No usable NASA images found")
+        return None
+
+    # Pick a random candidate
+    item_data, links = random.choice(candidates)
+    nasa_id = item_data["nasa_id"]
+    title = item_data.get("title", "NASA Space Image")
+
+    # Get the best image URL — prefer ~large, fallback to preview href
+    image_url = _get_nasa_image_url(nasa_id, links)
+    if not image_url:
+        log.error(f"No downloadable URL for {nasa_id}")
         return None
 
     try:
         r = requests.get(image_url, timeout=30)
         r.raise_for_status()
     except Exception as e:
-        log.error(f"Failed to download APOD: {e}")
+        log.error(f"Failed to download NASA image {nasa_id}: {e}")
         return None
 
-    desc = apod.get("title", "NASA APOD")
-    history.setdefault("nasa", []).append(apod["date"])
+    # Track by nasa_id
+    history.setdefault("nasa", []).append(nasa_id)
     save_history(history)
 
-    log.info(f"NASA APOD: {desc} ({apod['date']}, {len(r.content)/1024:.0f} KB)")
-    return r.content, desc
+    log.info(f"NASA: {title} [{nasa_id}] ({len(r.content) / 1024:.0f} KB)")
+    return r.content, title
+
+
+def _get_nasa_image_url(nasa_id: str, links: list[dict]) -> str | None:
+    """Get the best image URL for a NASA image.
+
+    Tries: large > medium > preview thumbnail from links.
+    """
+    # Try fetching the asset manifest for high-res versions
+    try:
+        r = requests.get(
+            f"https://images-assets.nasa.gov/image/{nasa_id}/collection.json",
+            timeout=10,
+        )
+        if r.status_code == 200:
+            assets = r.json()
+            # Prefer ~large.jpg, then ~medium.jpg, then ~orig.jpg
+            for suffix in ("~large.jpg", "~medium.jpg", "~orig.jpg"):
+                for url in assets:
+                    if url.endswith(suffix):
+                        return url
+            # Any jpg that isn't thumb
+            for url in assets:
+                if url.endswith(".jpg") and "~thumb" not in url:
+                    return url
+    except Exception:
+        pass
+
+    # Fallback: use the preview href from search results
+    for link in links:
+        href = link.get("href", "")
+        if href and href.startswith("http"):
+            return href
+
+    return None
