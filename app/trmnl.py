@@ -20,14 +20,17 @@ def push_to_trmnl(description: str) -> bool:
         log.error("TRMNL_WEBHOOK_UUID not configured")
         return False
 
-    # Point TRMNL at our pre-processed image
-    image_url = f"{APP_URL}/current.png"
+    # Give every push a unique URL. TRMNL and its renderer may otherwise reuse
+    # the image cached for the stable /current.png path even after it changed.
+    pushed_at = datetime.now()
+    image_version = pushed_at.strftime("%Y%m%d%H%M%S%f")
+    image_url = f"{APP_URL}/current.png?v={image_version}"
 
     payload = {
         "merge_variables": {
             "image_url": image_url,
             "description": description,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "updated_at": pushed_at.isoformat(timespec="seconds"),
         }
     }
 
