@@ -32,8 +32,12 @@ def clean_data_dir():
             child.unlink()
     from app.gallery import ensure_dirs
     from app.config import PENDING_DIR
+    from app.auth import reset_challenges
+    from app.security import reset_login_rate_limit
     ensure_dirs()
     PENDING_DIR.mkdir(parents=True, exist_ok=True)
+    reset_challenges()
+    reset_login_rate_limit()
     yield
 
 

@@ -1,4 +1,5 @@
-"""Auth tests: protected routes require Basic auth, device endpoints stay public."""
+"""Auth tests: session/Basic on protected routes, login redirect for browsers,
+device endpoints stay public."""
 
 PROTECTED_GETS = [
     "/",
@@ -9,12 +10,33 @@ PROTECTED_GETS = [
     "/api/pending",
 ]
 
+HTML_ACCEPT = {"Accept": "text/html,application/xhtml+xml"}
+
 
 def test_protected_routes_require_auth(client):
+    """API clients (no text/html Accept) get 401 JSON with Basic challenge."""
     for path in PROTECTED_GETS:
         r = client.get(path)
         assert r.status_code == 401, path
         assert "WWW-Authenticate" in r.headers, path
+
+
+def test_browser_html_routes_redirect_to_login(client):
+    """Browsers (Accept: text/html) are redirected to /login instead of 401."""
+    r = client.get("/", headers=HTML_ACCEPT, follow_redirects=False)
+    assert r.status_code == 302
+    assert r.headers["location"] == "/login?next=%2F"
+
+    r = client.get("/gallery", headers=HTML_ACCEPT, follow_redirects=False)
+    assert r.status_code == 302
+    assert r.headers["location"].startswith("/login?next=%2Fgallery")
+
+
+def test_login_page_is_public(client):
+    r = client.get("/login")
+    assert r.status_code == 200
+    assert "TRMNL Admin" in r.text
+    assert "Anmelden" in r.text
 
 
 def test_mutating_routes_require_auth(client):
@@ -40,6 +62,7 @@ def test_public_endpoints_no_auth(client):
 
 
 def test_correct_credentials_accepted(client, auth):
+    """HTTP Basic keeps working on API endpoints (curl/scripting fallback)."""
     r = client.get("/api/status", auth=auth)
     assert r.status_code == 200
     assert "art_source" in r.json()

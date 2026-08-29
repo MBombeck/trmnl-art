@@ -1,9 +1,11 @@
 """TRMNL Art Display — FastAPI application.
 
 Serves pre-processed, e-ink optimized images to the TRMNL display.
-Public (unauthenticated): GET /current.png and GET /health.
-Everything else (admin UI, gallery, generator, mutating APIs) requires
-HTTP Basic auth (ADMIN_USERNAME/ADMIN_PASSWORD, fail-closed).
+Public (unauthenticated): GET /current.png, GET /health, the login page
+(/login) and the auth endpoints under /api/auth/*. Everything else
+(admin UI, gallery, generator, mutating APIs) requires a session cookie
+(login page: password or WebAuthn passkey) or HTTP Basic auth as
+curl/scripting fallback (ADMIN_USERNAME/ADMIN_PASSWORD, fail-closed).
 
 NOTE: /tagesimpulse/* is served by a separate container via Traefik
 PathPrefix — this app must never register routes under that prefix.
@@ -21,6 +23,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app import generator, state
+from app.auth import list_credentials, router as auth_router
 from app.config import (
     CURRENT_IMAGE,
     DATA_DIR,
@@ -133,8 +136,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# All admin/UI/API routes require HTTP Basic auth (fail-closed without
-# ADMIN_PASSWORD). Only /current.png and /health stay public.
+# All admin/UI/API routes require auth: session cookie (browser login) or
+# HTTP Basic (curl fallback), fail-closed without ADMIN_PASSWORD. Only
+# /current.png, /health, /login and /api/auth/* stay public.
 admin = APIRouter(dependencies=[Depends(require_admin)])
 
 
@@ -175,6 +179,7 @@ def dashboard():
         presets=generator.preset_options(),
         current_since=_current_since(),
         migration=get_migration_summary(),
+        passkeys=list_credentials(),
     )
 
 
@@ -438,4 +443,5 @@ async def build_index(pages: int = 5):
     return {"status": "ok", "total_paintings": len(index)}
 
 
+app.include_router(auth_router)
 app.include_router(admin)

@@ -254,6 +254,253 @@ async function apiCall(url, method='GET', body=null) {
 }
 """
 
+# WebAuthn ceremonies (vanilla JS, no CDN): base64url <-> ArrayBuffer helpers
+# plus register/login flows. Server payloads carry binary fields base64url-encoded.
+_WEBAUTHN_JS = """
+function b64uToBuf(s) {
+    const pad = '='.repeat((4 - s.length % 4) % 4);
+    const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/') + pad);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+}
+function bufToB64u(buf) {
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+}
+
+async function passkeyRegister(label) {
+    if (!window.PublicKeyCredential) throw new Error('Dieser Browser unterstützt keine Passkeys.');
+    const {state, options} = await apiCall('/api/auth/webauthn/register/options', 'POST', {});
+    options.challenge = b64uToBuf(options.challenge);
+    options.user.id = b64uToBuf(options.user.id);
+    (options.excludeCredentials || []).forEach(c => { c.id = b64uToBuf(c.id); });
+    const cred = await navigator.credentials.create({publicKey: options});
+    const transports = cred.response.getTransports ? cred.response.getTransports() : [];
+    return apiCall('/api/auth/webauthn/register/verify', 'POST', {
+        state, label, transports,
+        credential: {
+            id: cred.id,
+            rawId: bufToB64u(cred.rawId),
+            type: cred.type,
+            response: {
+                clientDataJSON: bufToB64u(cred.response.clientDataJSON),
+                attestationObject: bufToB64u(cred.response.attestationObject),
+            },
+            clientExtensionResults: cred.getClientExtensionResults(),
+        },
+    });
+}
+
+async function passkeyLogin() {
+    if (!window.PublicKeyCredential) throw new Error('Dieser Browser unterstützt keine Passkeys.');
+    const {state, options} = await apiCall('/api/auth/webauthn/login/options', 'POST', {});
+    options.challenge = b64uToBuf(options.challenge);
+    (options.allowCredentials || []).forEach(c => { c.id = b64uToBuf(c.id); });
+    const cred = await navigator.credentials.get({publicKey: options});
+    return apiCall('/api/auth/webauthn/login/verify', 'POST', {
+        state,
+        credential: {
+            id: cred.id,
+            rawId: bufToB64u(cred.rawId),
+            type: cred.type,
+            response: {
+                clientDataJSON: bufToB64u(cred.response.clientDataJSON),
+                authenticatorData: bufToB64u(cred.response.authenticatorData),
+                signature: bufToB64u(cred.response.signature),
+                userHandle: cred.response.userHandle ? bufToB64u(cred.response.userHandle) : null,
+            },
+            clientExtensionResults: cred.getClientExtensionResults(),
+        },
+    });
+}
+"""
+
+_LOGIN_JS = """
+const loginForm = document.getElementById('login-form');
+const loginErr = document.getElementById('login-error');
+const nextPath = loginForm.dataset.next || '/';
+
+function showLoginError(msg) {
+    loginErr.textContent = msg;
+    loginErr.style.display = 'block';
+}
+
+loginForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    loginErr.style.display = 'none';
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    try {
+        const r = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: document.getElementById('login-password').value}),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'Anmeldung fehlgeschlagen.');
+        location.href = nextPath;
+    } catch(e) {
+        showLoginError(e.message);
+        btn.disabled = false;
+    }
+});
+
+const pkBtn = document.getElementById('btn-passkey');
+if (pkBtn) pkBtn.addEventListener('click', async () => {
+    loginErr.style.display = 'none';
+    pkBtn.disabled = true;
+    try {
+        await passkeyLogin();
+        location.href = nextPath;
+    } catch(e) {
+        showLoginError(e.message || 'Passkey-Anmeldung fehlgeschlagen.');
+        pkBtn.disabled = false;
+    }
+});
+"""
+
+
+_SECURITY_JS = """
+document.getElementById('btn-add-passkey').addEventListener('click', async (ev) => {
+    const label = prompt('Name des Passkeys (z.B. "Laptop Fingerabdruck"):');
+    if (label === null) return;
+    const btn = ev.currentTarget;
+    busy(btn, 'Warte auf Passkey …');
+    try {
+        await passkeyRegister(label.trim() || 'Passkey');
+        toast('Passkey hinzugefügt.', 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch(e) {
+        if (!(e && e.handled)) toast(e.message || 'Passkey-Registrierung abgebrochen.', 'error');
+    }
+    unbusy(btn);
+});
+
+document.querySelectorAll('.passkey-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        if (!confirm('Diesen Passkey löschen?')) return;
+        try {
+            await apiCall('/api/auth/webauthn/credentials/' + encodeURIComponent(btn.dataset.id), 'DELETE');
+            const row = btn.closest('.passkey-row');
+            if (row) row.remove();
+            if (!document.querySelector('.passkey-row')) {
+                document.getElementById('passkey-list').innerHTML = '<div class="passkey-empty">Noch keine Passkeys registriert.</div>';
+            }
+            toast('Passkey gelöscht.', 'success');
+        } catch(e) {}
+    });
+});
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+    try { await apiCall('/api/auth/logout', 'POST', {}); } catch(e) {}
+    location.href = '/login';
+});
+"""
+
+
+def render_login(next_path: str = "/", has_passkeys: bool = False) -> str:
+    """Render the login page (German, dark, centered card)."""
+    passkey_html = ""
+    if has_passkeys:
+        passkey_html = """
+        <div class="login-divider">oder</div>
+        <button class="btn login-btn" id="btn-passkey" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8m0-4h3"/></svg>
+            Mit Passkey anmelden
+        </button>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="de"><head>
+{_HEAD}
+<title>TRMNL Admin — Anmeldung</title>
+<style>
+{_SHARED_CSS}
+
+    .login-wrap {{
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }}
+    .login-card {{
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 40px 34px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+    }}
+    .login-brand {{
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        color: var(--gold);
+        text-align: center;
+        letter-spacing: -0.02em;
+    }}
+    .login-sub {{
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin: 4px 0 26px;
+    }}
+    .login-btn {{
+        width: 100%;
+        justify-content: center;
+        margin-top: 14px;
+    }}
+    .login-divider {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-dim);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 18px 0 4px;
+    }}
+    .login-divider::before, .login-divider::after {{
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }}
+    .login-error {{
+        display: none;
+        margin-top: 14px;
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: rgba(192,57,43,0.12);
+        border: 1px solid rgba(192,57,43,0.25);
+        color: #e66;
+        font-size: 0.82rem;
+    }}
+</style>
+</head><body>
+<div class="login-wrap">
+    <form class="login-card fade-up" id="login-form" data-next="{esc(next_path)}">
+        <div class="login-brand">TRMNL Admin</div>
+        <div class="login-sub">Anmeldung erforderlich</div>
+        <label class="field-label" for="login-password">Passwort</label>
+        <input class="field" id="login-password" type="password" autocomplete="current-password" autofocus required>
+        <button class="btn btn-gold login-btn" id="btn-login" type="submit">Anmelden</button>
+        {passkey_html}
+        <div class="login-error" id="login-error"></div>
+    </form>
+</div>
+
+<script>
+{_TOAST_JS}
+{_WEBAUTHN_JS}
+{_LOGIN_JS}
+</script>
+</body></html>"""
+
+
 _SOURCE_LABELS = {
     "goat-art": "Ziegen-Kunst",
     "rijksmuseum": "Rijksmuseum",
@@ -272,6 +519,7 @@ def render_dashboard(
     presets: list[dict] | None = None,
     current_since: str | None = None,
     migration: dict | None = None,
+    passkeys: list[dict] | None = None,
 ) -> str:
     """Render the unified dashboard HTML page (German, escaped)."""
     import time as _time
@@ -279,6 +527,7 @@ def render_dashboard(
     jobs = status.get("jobs", {})
     pending = pending or []
     presets = presets or []
+    passkeys = passkeys or []
 
     def job_card(source: str, label: str, css_class: str) -> str:
         job = jobs.get(source, {})
@@ -373,6 +622,22 @@ def render_dashboard(
         )
 
     since_html = f" &middot; seit {esc(current_since)}" if current_since else ""
+
+    # --- Sicherheit panel (passkeys) ---
+    def passkey_row(cred: dict) -> str:
+        created = (cred.get("created_at", "") or "")[:16].replace("T", " ")
+        return f"""
+                <div class="passkey-row" data-id="{esc(cred.get('id', ''))}">
+                    <div>
+                        <div class="passkey-label">{esc(cred.get('label', 'Passkey'))}</div>
+                        <div class="passkey-date">{esc(created) if created else 'Unbekannt'}</div>
+                    </div>
+                    <button class="btn btn-danger btn-sm passkey-delete" data-id="{esc(cred.get('id', ''))}">Löschen</button>
+                </div>"""
+
+    passkey_rows = "".join(passkey_row(c) for c in passkeys)
+    if not passkey_rows:
+        passkey_rows = '<div class="passkey-empty">Noch keine Passkeys registriert.</div>'
 
     def source_btn(key: str) -> str:
         active = " active" if current_source == key else ""
@@ -605,6 +870,21 @@ def render_dashboard(
         color: #e66;
     }}
 
+    /* Sicherheit (passkeys) */
+    .passkey-row {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+    }}
+    .passkey-row:last-of-type {{ border-bottom: none; }}
+    .passkey-label {{ font-size: 0.85rem; font-weight: 500; }}
+    .passkey-date {{ font-size: 0.72rem; color: var(--text-dim); }}
+    .passkey-empty {{ color: var(--text-dim); font-size: 0.82rem; padding: 6px 0 10px; }}
+    .security-actions {{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }}
+
     footer {{
         text-align: center;
         padding: 40px 0;
@@ -675,6 +955,17 @@ def render_dashboard(
                     <button class="btn" id="btn-refresh">Aktualisieren</button>
                 </div>
             </div>
+
+            <div class="control-section fade-up" style="animation-delay:0.2s">
+                <h3>Sicherheit</h3>
+                <div id="passkey-list">
+                    {passkey_rows}
+                </div>
+                <div class="security-actions">
+                    <button class="btn btn-gold btn-sm" id="btn-add-passkey">Passkey hinzufügen</button>
+                    <button class="btn btn-sm" id="btn-logout">Abmelden</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -713,6 +1004,7 @@ def render_dashboard(
 
 <script>
 {_TOAST_JS}
+{_WEBAUTHN_JS}
 
 function busy(btn, label) {{
     btn.disabled = true;
@@ -812,6 +1104,8 @@ document.querySelectorAll('.pending-discard').forEach(btn => {{
         }} catch(e) {{}}
     }});
 }});
+
+{_SECURITY_JS}
 </script>
 </body></html>"""
 

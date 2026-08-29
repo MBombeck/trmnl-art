@@ -40,9 +40,13 @@ HASHES_FILE = DATA_DIR / "gallery-hashes.json"
 MIGRATION_LOG_FILE = DATA_DIR / "migration-log.json"
 PENDING_DIR = DATA_DIR / "pending"
 
-# Admin auth (HTTP Basic). Read dynamically in app.security so tests can
-# override at runtime — these are only documented defaults.
+# Admin auth. Read dynamically in app.security so tests can override at
+# runtime — these are only documented defaults.
+# Env vars: ADMIN_PASSWORD (required, fail-closed), ADMIN_USERNAME,
+# SESSION_SECRET (optional; falls back to a key derived from ADMIN_PASSWORD),
+# WEBAUTHN_RP_ID, WEBAUTHN_ORIGINS (comma-separated).
 ADMIN_USERNAME_DEFAULT = "marc"
+PASSKEYS_FILE = DATA_DIR / "passkeys.json"
 
 # Tagesimpulse (separate container, reached via public Traefik route).
 # Empty string disables the dashboard panel (used in tests).
