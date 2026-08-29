@@ -14,6 +14,7 @@ from app.config import (
     INDEX_FILE,
     MIN_LANDSCAPE_RATIO,
 )
+from app.util import read_json, write_json_atomic
 
 log = logging.getLogger("trmnl-art.sources")
 
@@ -45,13 +46,11 @@ NASA_SEARCH_QUERIES = [
 
 
 def load_history() -> dict:
-    if HISTORY_FILE.exists():
-        return json.loads(HISTORY_FILE.read_text())
-    return {"rijksmuseum": [], "nasa": []}
+    return read_json(HISTORY_FILE, None) or {"rijksmuseum": [], "nasa": []}
 
 
 def save_history(history: dict):
-    HISTORY_FILE.write_text(json.dumps(history, indent=2, ensure_ascii=False))
+    write_json_atomic(HISTORY_FILE, history)
 
 
 # --- Rijksmuseum ---
@@ -164,8 +163,8 @@ def build_rijksmuseum_index(max_pages: int = 50) -> list[dict]:
 
             time.sleep(0.5)
 
-        # Save after each page
-        INDEX_FILE.write_text(json.dumps(index, indent=2, ensure_ascii=False))
+        # Save after each page (atomic)
+        write_json_atomic(INDEX_FILE, index)
 
         nxt = data.get("next", {})
         url = nxt.get("id") if nxt else None

@@ -1,15 +1,25 @@
 """Multi-source gallery manager — list, save, delete images with metadata.
 
-Deleted images are tracked in a blacklist so they never reappear
-(not from seed data, not from scheduled pushes, not from the gallery source).
+- Deleted images are tracked in a blacklist so they never reappear.
+- A sha256 hash index (data/gallery-hashes.json) prevents duplicate images
+  from being written twice into the same gallery.
+- run_startup_migration() dedupes existing files by content hash and repairs
+  images that are not 800x480 or carry baked-in uniform borders.
 """
 
-import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 
-from app.config import DATA_DIR
+from app.config import (
+    DATA_DIR,
+    DISPLAY_HEIGHT,
+    DISPLAY_WIDTH,
+    HASHES_FILE,
+    MIGRATION_LOG_FILE,
+)
+from app.util import read_json, sha256_hex, write_bytes_atomic, write_json_atomic
 
 log = logging.getLogger("trmnl-art.gallery")
 
@@ -23,6 +33,8 @@ GALLERY_DIRS = {
 
 BLACKLIST_FILE = DATA_DIR / "deleted-images.json"
 
+_DATE_SUFFIX_RE = re.compile(r"_\d{8}$")
+
 
 def ensure_dirs():
     """Create all gallery directories."""
@@ -30,24 +42,53 @@ def ensure_dirs():
         d.mkdir(parents=True, exist_ok=True)
 
 
+# --- Blacklist ---
+
+
 def _load_blacklist() -> dict[str, list[str]]:
     """Load the deletion blacklist {source: [stem1, stem2, ...]}."""
-    if BLACKLIST_FILE.exists():
-        try:
-            return json.loads(BLACKLIST_FILE.read_text())
-        except Exception:
-            pass
-    return {}
+    return read_json(BLACKLIST_FILE, {}) or {}
 
 
 def _save_blacklist(bl: dict[str, list[str]]):
-    BLACKLIST_FILE.write_text(json.dumps(bl, indent=2, ensure_ascii=False))
+    write_json_atomic(BLACKLIST_FILE, bl)
 
 
 def is_blacklisted(source: str, stem: str) -> bool:
     """Check if an image stem is blacklisted for a source."""
     bl = _load_blacklist()
     return stem in bl.get(source, [])
+
+
+# --- Hash index (content dedupe) ---
+
+
+def _load_hash_index() -> dict[str, dict[str, str]]:
+    """Load {source: {sha256: filename}}."""
+    return read_json(HASHES_FILE, {}) or {}
+
+
+def _save_hash_index(idx: dict[str, dict[str, str]]):
+    write_json_atomic(HASHES_FILE, idx)
+
+
+def _rebuild_hash_index() -> dict[str, dict[str, str]]:
+    """Rebuild the hash index from the files on disk (atomic write)."""
+    idx: dict[str, dict[str, str]] = {}
+    for src, d in GALLERY_DIRS.items():
+        idx[src] = {}
+        if not d.exists():
+            continue
+        for f in sorted(d.glob("*.png")):
+            try:
+                idx[src][sha256_hex(f.read_bytes())] = f.name
+            except OSError as e:
+                log.warning(f"Hash index: cannot read {f}: {e}")
+    _save_hash_index(idx)
+    return idx
+
+
+# --- Listing / CRUD ---
 
 
 def list_images(source: str | None = None) -> list[dict]:
@@ -71,29 +112,45 @@ def list_images(source: str | None = None) -> list[dict]:
     return result
 
 
-def save_image(source: str, filename: str, img_bytes: bytes, title: str):
-    """Save an image + metadata to the source gallery. Skips blacklisted images."""
+def save_image(source: str, filename: str, img_bytes: bytes, title: str) -> str | None:
+    """Save an image + metadata to the source gallery.
+
+    Content-hash aware: when an identical image already exists in this
+    gallery, nothing is written and the existing filename is returned.
+    Blacklisted stems are skipped (returns None).
+    """
     if source not in SOURCES:
         raise ValueError(f"Unknown source: {source}")
     stem = Path(filename).stem
     if is_blacklisted(source, stem):
         log.info(f"Skipping blacklisted image: {filename}")
-        return
+        return None
     gallery_dir = GALLERY_DIRS[source]
     gallery_dir.mkdir(parents=True, exist_ok=True)
 
-    img_path = gallery_dir / filename
-    img_path.write_bytes(img_bytes)
+    digest = sha256_hex(img_bytes)
+    idx = _load_hash_index()
+    existing = idx.get(source, {}).get(digest)
+    if existing and (gallery_dir / existing).exists():
+        log.info(f"Dedupe: identical image already in {source} gallery as {existing}, skipping write")
+        return existing
 
-    meta_path = gallery_dir / f"{Path(filename).stem}.json"
-    meta_path.write_text(json.dumps({
+    img_path = gallery_dir / filename
+    write_bytes_atomic(img_path, img_bytes)
+
+    meta_path = gallery_dir / f"{stem}.json"
+    write_json_atomic(meta_path, {
         "title": title,
         "source": source,
         "pushed_at": datetime.now().isoformat(),
         "filename": filename,
-    }, indent=2, ensure_ascii=False))
+    })
+
+    idx.setdefault(source, {})[digest] = filename
+    _save_hash_index(idx)
 
     log.info(f"Saved to {source} gallery: {filename} ({len(img_bytes) / 1024:.0f} KB)")
+    return filename
 
 
 def delete_image(source: str, filename: str) -> bool:
@@ -108,10 +165,21 @@ def delete_image(source: str, filename: str) -> bool:
         return False
 
     stem = img_path.stem
+    try:
+        digest = sha256_hex(img_path.read_bytes())
+    except OSError:
+        digest = None
     img_path.unlink()
     meta_path = gallery_dir / f"{stem}.json"
     if meta_path.exists():
         meta_path.unlink()
+
+    # Drop from hash index
+    if digest:
+        idx = _load_hash_index()
+        if idx.get(source, {}).get(digest) == filename:
+            del idx[source][digest]
+            _save_hash_index(idx)
 
     # Add to blacklist so it never comes back
     bl = _load_blacklist()
@@ -148,10 +216,98 @@ def get_counts() -> dict[str, int]:
 
 def _load_meta(img_path: Path) -> dict:
     """Load metadata JSON for an image, or return empty dict."""
-    meta_path = img_path.with_suffix(".json")
-    if meta_path.exists():
-        try:
-            return json.loads(meta_path.read_text())
-        except Exception:
-            pass
-    return {}
+    return read_json(img_path.with_suffix(".json"), {}) or {}
+
+
+# --- Startup migration: content dedupe + size/border repair ---
+
+
+def _pick_keeper(files: list[Path]) -> Path:
+    """Choose which duplicate to keep: oldest mtime wins; when mtimes are
+    close (<= 60s) prefer semantic names over *_YYYYMMDD date stems."""
+    oldest = min(f.stat().st_mtime for f in files)
+    close = [f for f in files if f.stat().st_mtime - oldest <= 60]
+    semantic = [f for f in close if not _DATE_SUFFIX_RE.search(f.stem)]
+    pool = semantic or close
+    return min(pool, key=lambda f: (f.stat().st_mtime, f.name))
+
+
+def run_startup_migration() -> dict:
+    """One-time (idempotent) gallery cleanup, run at every startup.
+
+    1. Dedupe: group files per gallery by sha256, keep one, delete the rest
+       (including sidecar JSONs). Removed duplicates are NOT blacklisted.
+    2. Repair: any image that is not exactly 800x480 or has uniform borders
+       is trimmed + cover-fitted and re-saved under the same filename.
+    3. Rebuild the hash index and write a summary to migration-log.json.
+    """
+    from app.processing import encode_png, open_rgb, resize_cover, trim_uniform_borders
+
+    summary = {
+        "ran_at": datetime.now().isoformat(),
+        "duplicates_removed": 0,
+        "repaired": 0,
+        "removed_files": [],
+        "repaired_files": [],
+    }
+
+    for src, d in GALLERY_DIRS.items():
+        if not d.exists():
+            continue
+
+        # 1) Content dedupe
+        by_hash: dict[str, list[Path]] = {}
+        for f in sorted(d.glob("*.png")):
+            try:
+                by_hash.setdefault(sha256_hex(f.read_bytes()), []).append(f)
+            except OSError as e:
+                log.warning(f"Migration: cannot read {f}: {e}")
+        for digest, files in by_hash.items():
+            if len(files) < 2:
+                continue
+            keeper = _pick_keeper(files)
+            for f in files:
+                if f == keeper:
+                    continue
+                try:
+                    f.unlink()
+                    sidecar = f.with_suffix(".json")
+                    if sidecar.exists():
+                        sidecar.unlink()
+                    summary["duplicates_removed"] += 1
+                    summary["removed_files"].append(f"{src}/{f.name}")
+                    log.info(f"Migration: removed duplicate {src}/{f.name} (kept {keeper.name})")
+                except OSError as e:
+                    log.warning(f"Migration: failed to remove {f}: {e}")
+
+        # 2) Size/border repair
+        for f in sorted(d.glob("*.png")):
+            try:
+                img = open_rgb(f.read_bytes())
+            except Exception as e:
+                log.warning(f"Migration: unreadable image {f}: {e}")
+                continue
+            trimmed = trim_uniform_borders(img)
+            needs_fix = img.size != (DISPLAY_WIDTH, DISPLAY_HEIGHT) or trimmed.size != img.size
+            if not needs_fix:
+                continue
+            if trimmed.size != (DISPLAY_WIDTH, DISPLAY_HEIGHT):
+                trimmed = resize_cover(trimmed)
+            write_bytes_atomic(f, encode_png(trimmed))
+            summary["repaired"] += 1
+            summary["repaired_files"].append(f"{src}/{f.name}")
+            log.info(f"Migration: repaired {src}/{f.name} ({img.size} -> 800x480)")
+
+    # 3) Rebuild index + persist summary
+    _rebuild_hash_index()
+    write_json_atomic(MIGRATION_LOG_FILE, summary)
+    log.info(
+        f"Gallery migration done: {summary['duplicates_removed']} duplicates removed, "
+        f"{summary['repaired']} images repaired"
+    )
+    return summary
+
+
+def get_migration_summary() -> dict | None:
+    """Last migration summary (from data/migration-log.json) or None."""
+    return read_json(MIGRATION_LOG_FILE, None)

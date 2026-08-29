@@ -1,4 +1,23 @@
-"""HTML templates for Dashboard and Gallery — museum/gallery aesthetic."""
+"""HTML templates for Dashboard and Gallery — museum/gallery aesthetic.
+
+Server-rendered f-strings. ALL dynamic values are escaped via esc() for HTML
+contexts; values that must reach JavaScript go through data-* attributes and
+are read via element.dataset (no direct JS interpolation).
+"""
+
+import html
+import json
+
+
+def esc(value) -> str:
+    """Escape a dynamic value for safe HTML interpolation."""
+    return html.escape(str(value), quote=True)
+
+
+def js(value) -> str:
+    """Serialize a value for a JS context (<script>), XSS-hardened."""
+    return json.dumps(value, ensure_ascii=False).replace("</", "<\\/")
+
 
 # Shared CSS and head
 _HEAD = """<meta charset="utf-8">
@@ -110,6 +129,7 @@ _SHARED_CSS = """
         display: flex;
         flex-direction: column;
         gap: 8px;
+        max-width: 420px;
     }
     .toast {
         padding: 12px 20px;
@@ -152,6 +172,28 @@ _SHARED_CSS = """
     .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* Form controls */
+    .field {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+    }
+    .field:focus { outline: none; border-color: var(--gold-dim); }
+    textarea.field { resize: vertical; min-height: 64px; }
+    .field-label {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 12px 0 4px;
+    }
+
     /* Spinner */
     .spinner {
         display: inline-block;
@@ -172,6 +214,18 @@ _SHARED_CSS = """
     .fade-up {
         animation: fade-up 0.4s ease-out both;
     }
+
+    /* Info banner */
+    .banner {
+        padding: 12px 18px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: rgba(212,168,83,0.08);
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin-bottom: 24px;
+    }
+    .banner strong { color: var(--gold); font-weight: 600; }
 """
 
 _TOAST_JS = """
@@ -182,7 +236,7 @@ function toast(msg, type='info') {
     t.className = 'toast toast-' + type;
     t.textContent = msg;
     c.appendChild(t);
-    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.transition='all 0.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.transition='all 0.3s'; setTimeout(() => t.remove(), 300); }, 4500);
 }
 
 async function apiCall(url, method='GET', body=null) {
@@ -190,7 +244,7 @@ async function apiCall(url, method='GET', body=null) {
         const opts = { method };
         if (body) { opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
         const r = await fetch(url, opts);
-        const data = await r.json();
+        const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data.detail || data.error || r.statusText);
         return data;
     } catch(e) {
@@ -200,58 +254,135 @@ async function apiCall(url, method='GET', body=null) {
 }
 """
 
+_SOURCE_LABELS = {
+    "goat-art": "Ziegen-Kunst",
+    "rijksmuseum": "Rijksmuseum",
+    "nasa": "NASA Weltraum",
+    "mixed": "Gemischt",
+    "random": "Zufällig",
+}
 
-def render_dashboard(status: dict, gallery_counts: dict) -> str:
-    """Render the dashboard HTML page."""
+
+def render_dashboard(
+    status: dict,
+    gallery_counts: dict,
+    *,
+    tagesimpulse: dict | None = None,
+    pending: list[dict] | None = None,
+    presets: list[dict] | None = None,
+    current_since: str | None = None,
+    migration: dict | None = None,
+) -> str:
+    """Render the unified dashboard HTML page (German, escaped)."""
     import time as _time
     cache_bust = int(_time.time())
     jobs = status.get("jobs", {})
+    pending = pending or []
+    presets = presets or []
 
     def job_card(source: str, label: str, css_class: str) -> str:
         job = jobs.get(source, {})
-        last_success = job.get("last_success", "")
-        last_error = job.get("last_error", "")
-        next_run = job.get("next_run", "")
+        last_success = job.get("last_success", "") or ""
+        last_error = job.get("last_error", "") or ""
+        next_run = job.get("next_run", "") or ""
         retries = job.get("retries", 0)
 
-        success_time = last_success[:16].replace("T", " ") if last_success else "Never"
-        next_time = next_run[:16].replace("T", " ") if next_run else "Not scheduled"
-        error_html = f'<div class="job-error">{last_error}</div>' if last_error else ""
-        retry_html = f'<span class="retry-badge">{retries} retries</span>' if retries > 0 else ""
+        success_time = esc(last_success[:16].replace("T", " ")) if last_success else "Nie"
+        next_time = esc(next_run[:16].replace("T", " ")) if next_run else "Nicht geplant"
+        error_html = f'<div class="job-error">{esc(last_error)}</div>' if last_error else ""
+        retry_html = f'<span class="retry-badge">{int(retries)} Retries</span>' if retries else ""
 
         return f"""
         <div class="job-card fade-up">
             <div class="job-header">
-                <span class="badge badge-{css_class}">{label}</span>
+                <span class="badge badge-{esc(css_class)}">{esc(label)}</span>
                 {retry_html}
             </div>
             <div class="job-stats">
                 <div class="job-stat">
-                    <span class="job-stat-label">Last success</span>
+                    <span class="job-stat-label">Letzter Erfolg</span>
                     <span class="job-stat-value">{success_time}</span>
                 </div>
                 <div class="job-stat">
-                    <span class="job-stat-label">Next run</span>
+                    <span class="job-stat-label">Nächster Lauf</span>
                     <span class="job-stat-value">{next_time}</span>
                 </div>
                 <div class="job-stat">
-                    <span class="job-stat-label">Gallery</span>
-                    <span class="job-stat-value">{gallery_counts.get(source, 0)} images</span>
+                    <span class="job-stat-label">Galerie</span>
+                    <span class="job-stat-value">{int(gallery_counts.get(source, 0))} Bilder</span>
                 </div>
             </div>
             {error_html}
-            <button class="btn btn-gold btn-sm" onclick="pushSource('{source}')">
-                Push Now
+            <button class="btn btn-gold btn-sm push-source-btn" data-source="{esc(source)}">
+                Jetzt pushen
             </button>
         </div>"""
 
     current_source = status.get("art_source", "goat-art")
     scheduler_running = status.get("scheduler_running", False)
     img_exists = status.get("current_image_exists", False)
-    img_size = status.get("current_image_size_kb", 0)
+    img_size = float(status.get("current_image_size_kb", 0) or 0)
+
+    # --- Tagesimpulse panel ---
+    if tagesimpulse:
+        ti_html = f"""
+            <div class="ti-quote">&bdquo;{esc(tagesimpulse.get('spruch', ''))}&ldquo;</div>
+            <div class="ti-meta">
+                <span>{esc(tagesimpulse.get('autor', ''))}</span>
+                <span>{esc(tagesimpulse.get('anzeige_datum', ''))}</span>
+            </div>
+            <a class="btn btn-sm" href="https://trmnl-art.bombeck.io/tagesimpulse/" target="_blank" rel="noopener">Browser-Ansicht öffnen</a>"""
+    else:
+        ti_html = '<div class="ti-unavailable">Tagesimpulse derzeit nicht erreichbar.</div>'
+
+    # --- Generator panel ---
+    preset_opts = "".join(
+        f'<option value="{esc(p["key"])}">{esc(p["label"])}</option>' for p in presets
+    )
+
+    def pending_card(item: dict) -> str:
+        item_id = item.get("id", "")
+        title = item.get("title", "")
+        created = (item.get("created_at", "") or "")[:16].replace("T", " ")
+        return f"""
+        <div class="pending-card fade-up" data-id="{esc(item_id)}">
+            <img src="/api/pending/{esc(item_id)}.png" alt="{esc(title)}" loading="lazy">
+            <div class="pending-info">
+                <div class="pending-title" title="{esc(item.get('prompt', ''))}">{esc(title)}</div>
+                <div class="pending-date">{esc(created)}</div>
+                <div class="pending-actions">
+                    <button class="btn btn-sm pending-accept" data-id="{esc(item_id)}" data-push="0">Übernehmen</button>
+                    <button class="btn btn-gold btn-sm pending-accept" data-id="{esc(item_id)}" data-push="1">Übernehmen + Pushen</button>
+                    <button class="btn btn-danger btn-sm pending-discard" data-id="{esc(item_id)}">Verwerfen</button>
+                </div>
+            </div>
+        </div>"""
+
+    pending_html = "".join(pending_card(p) for p in pending)
+    if not pending_html:
+        pending_html = '<div class="pending-empty">Keine ausstehenden Entwürfe. Generiere ein Bild und prüfe es hier, bevor es in die Galerie wandert.</div>'
+
+    # --- Migration banner ---
+    migration_html = ""
+    if migration and (migration.get("duplicates_removed") or migration.get("repaired")):
+        migration_html = (
+            f'<div class="banner"><strong>Galerie bereinigt:</strong> '
+            f'{int(migration.get("duplicates_removed", 0))} Duplikate entfernt, '
+            f'{int(migration.get("repaired", 0))} Bilder repariert '
+            f'(letzter Lauf: {esc((migration.get("ran_at") or "")[:16].replace("T", " "))}).</div>'
+        )
+
+    since_html = f" &middot; seit {esc(current_since)}" if current_since else ""
+
+    def source_btn(key: str) -> str:
+        active = " active" if current_source == key else ""
+        return (
+            f'<button class="source-btn{active}" data-source="{esc(key)}">'
+            f"{esc(_SOURCE_LABELS.get(key, key))}</button>"
+        )
 
     return f"""<!DOCTYPE html>
-<html lang="en"><head>
+<html lang="de"><head>
 {_HEAD}
 <title>TRMNL Art — Dashboard</title>
 <style>
@@ -362,6 +493,62 @@ def render_dashboard(status: dict, gallery_counts: dict) -> str:
         flex-wrap: wrap;
     }}
 
+    /* Two-column feature row: Tagesimpulse + Generator */
+    .feature-row {{
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 24px;
+        margin-bottom: 48px;
+        align-items: start;
+    }}
+    @media (max-width: 900px) {{ .feature-row {{ grid-template-columns: 1fr; }} }}
+
+    .ti-quote {{
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-style: italic;
+        line-height: 1.6;
+        margin-bottom: 14px;
+    }}
+    .ti-meta {{
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 16px;
+    }}
+    .ti-unavailable {{ color: var(--text-dim); font-size: 0.85rem; }}
+
+    .pending-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }}
+    .pending-card {{
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }}
+    .pending-card img {{
+        width: 100%;
+        aspect-ratio: 800/480;
+        object-fit: cover;
+        display: block;
+    }}
+    .pending-info {{ padding: 12px 14px; }}
+    .pending-title {{
+        font-size: 0.85rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }}
+    .pending-date {{ font-size: 0.72rem; color: var(--text-dim); margin: 2px 0 10px; }}
+    .pending-actions {{ display: flex; gap: 6px; flex-wrap: wrap; }}
+    .pending-empty {{ color: var(--text-dim); font-size: 0.85rem; margin-top: 12px; }}
+
     /* Job cards */
     .section-title {{
         font-family: var(--font-display);
@@ -432,15 +619,17 @@ def render_dashboard(status: dict, gallery_counts: dict) -> str:
         <div class="topbar-brand">TRMNL Art</div>
         <div class="topbar-nav">
             <a href="/" class="active">Dashboard</a>
-            <a href="/gallery">Gallery</a>
+            <a href="/gallery">Galerie</a>
         </div>
     </nav>
 
+    {migration_html}
+
     <div class="hero">
         <div class="preview-card fade-up">
-            {"<img src='/current.png?" + str(cache_bust) + "' class='preview-img' alt='Current display'>" if img_exists else "<div class='preview-img' style='display:flex;align-items:center;justify-content:center;color:var(--text-dim)'>No image</div>"}
+            {"<img src='/current.png?" + str(cache_bust) + "' class='preview-img' alt='Aktuelles Display-Bild'>" if img_exists else "<div class='preview-img' style='display:flex;align-items:center;justify-content:center;color:var(--text-dim)'>Kein Bild</div>"}
             <div class="preview-meta">
-                <span>Currently on display</span>
+                <span>Aktuell auf dem Display{since_html}</span>
                 <span>{img_size:.0f} KB</span>
             </div>
         </div>
@@ -451,49 +640,72 @@ def render_dashboard(status: dict, gallery_counts: dict) -> str:
                 <div class="status-grid">
                     <div class="status-item">
                         <span class="status-label">Scheduler</span>
-                        <span class="status-value"><span class="status-dot {"on" if scheduler_running else "off"}"></span>{"Running" if scheduler_running else "Stopped"}</span>
+                        <span class="status-value"><span class="status-dot {"on" if scheduler_running else "off"}"></span>{"Läuft" if scheduler_running else "Gestoppt"}</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Source</span>
-                        <span class="status-value" id="current-source">{current_source}</span>
+                        <span class="status-label">Quelle</span>
+                        <span class="status-value" id="current-source">{esc(_SOURCE_LABELS.get(current_source, current_source))}</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Image</span>
-                        <span class="status-value">{"Ready" if img_exists else "None"}</span>
+                        <span class="status-label">Bild</span>
+                        <span class="status-value">{"Bereit" if img_exists else "Keins"}</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Total Gallery</span>
-                        <span class="status-value">{gallery_counts.get("total", 0)} images</span>
+                        <span class="status-label">Galerie gesamt</span>
+                        <span class="status-value">{int(gallery_counts.get("total", 0))} Bilder</span>
                     </div>
                 </div>
             </div>
 
             <div class="control-section fade-up" style="animation-delay:0.1s">
-                <h3>Art Source</h3>
+                <h3>Kunstquelle</h3>
                 <div class="source-selector">
-                    <button class="source-btn {"active" if current_source == "goat-art" else ""}" onclick="setSource('goat-art')">Goat Art</button>
-                    <button class="source-btn {"active" if current_source == "rijksmuseum" else ""}" onclick="setSource('rijksmuseum')">Rijksmuseum</button>
-                    <button class="source-btn {"active" if current_source == "nasa" else ""}" onclick="setSource('nasa')">NASA Space</button>
-                    <button class="source-btn {"active" if current_source == "random" else ""}" onclick="setSource('random')">Random</button>
+                    {source_btn("goat-art")}
+                    {source_btn("rijksmuseum")}
+                    {source_btn("nasa")}
+                    {source_btn("random")}
                 </div>
             </div>
 
             <div class="control-section fade-up" style="animation-delay:0.15s">
-                <h3>Actions</h3>
+                <h3>Aktionen</h3>
                 <div class="action-row">
-                    <button class="btn btn-gold" onclick="pushNext()">Next Image</button>
-                    <button class="btn" onclick="buildIndex()">Build Index</button>
-                    <button class="btn" onclick="refreshStatus()">Refresh</button>
+                    <button class="btn btn-gold" id="btn-next">Nächstes Bild</button>
+                    <button class="btn" id="btn-index">Index erweitern</button>
+                    <button class="btn" id="btn-refresh">Aktualisieren</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <h2 class="section-title">Scheduled Jobs</h2>
+    <div class="feature-row">
+        <div class="control-section fade-up">
+            <h3>Tagesimpulse</h3>
+            {ti_html}
+        </div>
+
+        <div class="control-section fade-up" style="animation-delay:0.05s">
+            <h3>Bilder generieren</h3>
+            <label class="field-label" for="gen-style">Stil</label>
+            <select class="field" id="gen-style">{preset_opts}</select>
+            <label class="field-label" for="gen-subject">Motiv</label>
+            <input class="field" id="gen-subject" type="text" placeholder="z.B. eine fröhliche Ziege mit Sonnenbrille">
+            <label class="field-label" for="gen-prompt">Eigener Prompt (optional, ersetzt Stil + Motiv)</label>
+            <textarea class="field" id="gen-prompt" placeholder="Kompletter eigener Prompt …"></textarea>
+            <div style="margin-top:14px">
+                <button class="btn btn-gold" id="btn-generate">Generieren</button>
+            </div>
+            <div class="pending-grid" id="pending-grid">
+                {pending_html}
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Geplante Jobs</h2>
     <div class="jobs-grid">
-        {job_card("goat-art", "Goat Art", "goat")}
+        {job_card("goat-art", "Ziegen-Kunst", "goat")}
         {job_card("rijksmuseum", "Rijksmuseum", "rijks")}
-        {job_card("nasa", "NASA APOD", "nasa")}
+        {job_card("nasa", "NASA Weltraum", "nasa")}
     </div>
 
     <footer>TRMNL Art Display &middot; Device 22766</footer>
@@ -502,101 +714,157 @@ def render_dashboard(status: dict, gallery_counts: dict) -> str:
 <script>
 {_TOAST_JS}
 
-async function pushSource(source) {{
-    const btn = event.currentTarget;
+function busy(btn, label) {{
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Pushing...';
-    try {{
-        const data = await apiCall('/api/push/' + source);
-        toast(data.message || 'Pushed!', 'success');
-        setTimeout(() => location.reload(), 1500);
-    }} catch(e) {{}}
+    btn.dataset.orig = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span> ' + label;
+}}
+function unbusy(btn) {{
     btn.disabled = false;
-    btn.textContent = 'Push Now';
+    btn.textContent = btn.dataset.orig || btn.textContent;
 }}
 
-async function pushNext() {{
-    const btn = event.currentTarget;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Loading...';
+document.querySelectorAll('.push-source-btn').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        busy(btn, 'Pushe …');
+        try {{
+            const data = await apiCall('/api/push/' + encodeURIComponent(btn.dataset.source));
+            toast(data.message || 'Gepusht!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }} catch(e) {{}}
+        unbusy(btn);
+    }});
+}});
+
+document.getElementById('btn-next').addEventListener('click', async (ev) => {{
+    const btn = ev.currentTarget;
+    busy(btn, 'Lade …');
     try {{
         const data = await apiCall('/api/next');
-        toast(data.message || 'Next image pushed!', 'success');
+        toast(data.message || 'Nächstes Bild gepusht!', 'success');
         setTimeout(() => location.reload(), 1500);
     }} catch(e) {{}}
-    btn.disabled = false;
-    btn.textContent = 'Next Image';
-}}
+    unbusy(btn);
+}});
 
-async function setSource(source) {{
-    try {{
-        await apiCall('/api/source', 'POST', {{source}});
-        toast('Source changed to ' + source, 'success');
-        document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        document.getElementById('current-source').textContent = source;
-    }} catch(e) {{}}
-}}
+document.querySelectorAll('.source-btn').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        const source = btn.dataset.source;
+        try {{
+            await apiCall('/api/source', 'POST', {{source}});
+            toast('Quelle gewechselt: ' + source, 'success');
+            document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('current-source').textContent = btn.textContent.trim();
+        }} catch(e) {{}}
+    }});
+}});
 
-async function buildIndex() {{
-    const btn = event.currentTarget;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Building...';
-    toast('Building Rijksmuseum index (this takes a while)...', 'info');
+document.getElementById('btn-index').addEventListener('click', async (ev) => {{
+    const btn = ev.currentTarget;
+    busy(btn, 'Baue …');
+    toast('Rijksmuseum-Index wird erweitert (dauert eine Weile) …', 'info');
     try {{
         const data = await apiCall('/api/build-index?pages=5');
-        toast('Index built: ' + (data.total_paintings || '?') + ' paintings', 'success');
+        toast('Index: ' + (data.total_paintings || '?') + ' Gemälde', 'success');
     }} catch(e) {{}}
-    btn.disabled = false;
-    btn.textContent = 'Build Index';
-}}
+    unbusy(btn);
+}});
 
-async function refreshStatus() {{
+document.getElementById('btn-refresh').addEventListener('click', () => location.reload());
+
+document.getElementById('btn-generate').addEventListener('click', async (ev) => {{
+    const btn = ev.currentTarget;
+    const body = {{
+        style_preset: document.getElementById('gen-style').value || null,
+        subject: document.getElementById('gen-subject').value || null,
+        custom_prompt: document.getElementById('gen-prompt').value || null,
+    }};
+    busy(btn, 'Generiere (bis zu 2 Min) …');
     try {{
-        await apiCall('/api/status');
-        location.reload();
+        await apiCall('/api/generate', 'POST', body);
+        toast('Bild generiert — bitte unten prüfen.', 'success');
+        setTimeout(() => location.reload(), 1200);
     }} catch(e) {{}}
-}}
+    unbusy(btn);
+}});
+
+document.querySelectorAll('.pending-accept').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        const push = btn.dataset.push === '1';
+        busy(btn, push ? 'Pushe …' : 'Übernehme …');
+        try {{
+            const data = await apiCall('/api/pending/' + encodeURIComponent(btn.dataset.id) + '/accept', 'POST', {{push}});
+            toast(push && data.pushed ? 'Übernommen und gepusht!' : 'In Galerie übernommen.', 'success');
+            setTimeout(() => location.reload(), 1200);
+        }} catch(e) {{ unbusy(btn); }}
+    }});
+}});
+
+document.querySelectorAll('.pending-discard').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        if (!confirm('Diesen Entwurf verwerfen?')) return;
+        try {{
+            await apiCall('/api/pending/' + encodeURIComponent(btn.dataset.id), 'DELETE');
+            const card = btn.closest('.pending-card');
+            if (card) card.remove();
+            toast('Entwurf verworfen.', 'success');
+        }} catch(e) {{}}
+    }});
+}});
 </script>
 </body></html>"""
 
 
-def render_gallery(images: list[dict], counts: dict, source_filter: str = "all") -> str:
-    """Render the gallery HTML page."""
+def render_gallery(
+    images: list[dict],
+    counts: dict,
+    source_filter: str = "all",
+    migration: dict | None = None,
+) -> str:
+    """Render the gallery HTML page (escaped)."""
     def image_card(img: dict, idx: int) -> str:
         src = img["source"]
         badge_class = {"goat-art": "goat", "rijksmuseum": "rijks", "nasa": "nasa"}.get(src, "goat")
         pushed = img.get("pushed_at", "")[:10] if img.get("pushed_at") else ""
 
         return f"""
-        <div class="gallery-card fade-up" style="animation-delay:{min(idx * 0.03, 0.6):.2f}s" data-source="{src}">
+        <div class="gallery-card fade-up" style="animation-delay:{min(idx * 0.03, 0.6):.2f}s" data-source="{esc(src)}" data-filename="{esc(img['filename'])}">
             <div class="card-img-wrap">
-                <img src="{img['url']}" loading="lazy" alt="{img['title']}" onclick="zoomImage(this)">
+                <img src="{esc(img['url'])}" loading="lazy" alt="{esc(img['title'])}" class="zoomable">
                 <div class="card-actions">
-                    <button class="card-action card-push" onclick="pushImage('{src}', '{img['filename']}', this)" title="Push to TRMNL">
+                    <button class="card-action card-push" title="An TRMNL pushen">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
-                    <button class="card-action card-delete" onclick="deleteImage('{src}', '{img['filename']}', this)" title="Delete">
+                    <button class="card-action card-delete" title="Löschen">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>
                     </button>
                 </div>
             </div>
             <div class="card-info">
-                <span class="card-title">{img['title']}</span>
+                <span class="card-title">{esc(img['title'])}</span>
                 <div class="card-meta">
-                    <span class="badge badge-{badge_class}">{src}</span>
-                    <span class="card-size">{img['size_kb']:.0f} KB{(' &middot; ' + pushed) if pushed else ''}</span>
+                    <span class="badge badge-{esc(badge_class)}">{esc(src)}</span>
+                    <span class="card-size">{float(img['size_kb']):.0f} KB{(' &middot; ' + esc(pushed)) if pushed else ''}</span>
                 </div>
             </div>
         </div>"""
 
     cards = "".join(image_card(img, i) for i, img in enumerate(images))
-    total = counts.get("total", 0)
+    total = int(counts.get("total", 0))
+
+    migration_html = ""
+    if migration and (migration.get("duplicates_removed") or migration.get("repaired")):
+        migration_html = (
+            f'<div class="banner"><strong>Duplikate:</strong> Beim letzten Start wurden '
+            f'{int(migration.get("duplicates_removed", 0))} doppelte Bilder entfernt und '
+            f'{int(migration.get("repaired", 0))} Bilder auf 800&times;480 repariert.</div>'
+        )
 
     return f"""<!DOCTYPE html>
-<html lang="en"><head>
+<html lang="de"><head>
 {_HEAD}
-<title>TRMNL Art — Gallery ({total} images)</title>
+<title>TRMNL Art — Galerie ({total} Bilder)</title>
 <style>
 {_SHARED_CSS}
 
@@ -778,34 +1046,36 @@ def render_gallery(images: list[dict], counts: dict, source_filter: str = "all")
         <div class="topbar-brand">TRMNL Art</div>
         <div class="topbar-nav">
             <a href="/">Dashboard</a>
-            <a href="/gallery" class="active">Gallery</a>
+            <a href="/gallery" class="active">Galerie</a>
         </div>
     </nav>
 
+    {migration_html}
+
     <div class="gallery-header">
         <div>
-            <h1 class="gallery-title">Gallery <span id="img-count">{total} images</span></h1>
+            <h1 class="gallery-title">Galerie <span id="img-count">{total} Bilder</span></h1>
             <div class="source-counts">
-                <span><span class="badge badge-goat" style="font-size:0.65rem">Goat</span> {counts.get("goat-art", 0)}</span>
-                <span><span class="badge badge-rijks" style="font-size:0.65rem">Rijks</span> {counts.get("rijksmuseum", 0)}</span>
-                <span><span class="badge badge-nasa" style="font-size:0.65rem">NASA</span> {counts.get("nasa", 0)}</span>
+                <span><span class="badge badge-goat" style="font-size:0.65rem">Goat</span> {int(counts.get("goat-art", 0))}</span>
+                <span><span class="badge badge-rijks" style="font-size:0.65rem">Rijks</span> {int(counts.get("rijksmuseum", 0))}</span>
+                <span><span class="badge badge-nasa" style="font-size:0.65rem">NASA</span> {int(counts.get("nasa", 0))}</span>
             </div>
         </div>
         <div class="filter-bar">
-            <select class="filter-select" id="source-filter" onchange="filterGallery(this.value)">
-                <option value="all" {"selected" if source_filter == "all" else ""}>All Sources</option>
-                <option value="goat-art" {"selected" if source_filter == "goat-art" else ""}>Goat Art</option>
+            <select class="filter-select" id="source-filter">
+                <option value="all" {"selected" if source_filter == "all" else ""}>Alle Quellen</option>
+                <option value="goat-art" {"selected" if source_filter == "goat-art" else ""}>Ziegen-Kunst</option>
                 <option value="rijksmuseum" {"selected" if source_filter == "rijksmuseum" else ""}>Rijksmuseum</option>
-                <option value="nasa" {"selected" if source_filter == "nasa" else ""}>NASA APOD</option>
+                <option value="nasa" {"selected" if source_filter == "nasa" else ""}>NASA Weltraum</option>
             </select>
         </div>
     </div>
 
     <div class="gallery-grid" id="gallery">
-        {cards if cards else '<div class="empty-state"><h3>No images yet</h3><p>Push an image from the <a href="/">Dashboard</a> to start building your gallery.</p></div>'}
+        {cards if cards else '<div class="empty-state"><h3>Noch keine Bilder</h3><p>Pushe ein Bild vom <a href="/">Dashboard</a>, um die Galerie zu füllen.</p></div>'}
     </div>
 
-    <footer>TRMNL Art Display &middot; {total} images across {sum(1 for s in ("goat-art","rijksmuseum","nasa") if counts.get(s,0) > 0)} sources</footer>
+    <footer>TRMNL Art Display &middot; {total} Bilder aus {sum(1 for s in ("goat-art", "rijksmuseum", "nasa") if counts.get(s, 0) > 0)} Quellen</footer>
 </div>
 
 <script>
@@ -822,52 +1092,61 @@ function filterGallery(source) {{
             card.style.display = 'none';
         }}
     }});
-    document.getElementById('img-count').textContent = visible + ' images';
-    // Update URL without reload
+    document.getElementById('img-count').textContent = visible + ' Bilder';
     const url = new URL(window.location);
     if (source === 'all') url.searchParams.delete('source');
     else url.searchParams.set('source', source);
     history.replaceState(null, '', url);
 }}
 
-async function pushImage(source, filename, btn) {{
-    btn.style.background = 'var(--gold-dim)';
-    btn.style.color = '#fff';
-    try {{
-        const data = await apiCall('/api/galleries/' + source + '/' + filename + '/push', 'POST');
-        toast(data.message || 'Pushed to TRMNL!', 'success');
-    }} catch(e) {{}}
-    setTimeout(() => {{ btn.style.background = ''; btn.style.color = ''; }}, 1500);
-}}
+document.getElementById('source-filter').addEventListener('change', (ev) => filterGallery(ev.target.value));
 
-async function deleteImage(source, filename, btn) {{
-    if (!confirm('Delete this image from the gallery?')) return;
-    const card = btn.closest('.gallery-card');
-    try {{
-        await apiCall('/api/galleries/' + source + '/' + filename, 'DELETE');
-        card.style.transform = 'scale(0.95)';
-        card.style.opacity = '0';
-        card.style.transition = 'all 0.3s';
-        setTimeout(() => {{
-            card.remove();
-            // Update count
-            const remaining = document.querySelectorAll('.gallery-card:not([style*="display: none"])').length;
-            document.getElementById('img-count').textContent = remaining + ' images';
-        }}, 300);
-        toast('Image deleted', 'success');
-    }} catch(e) {{}}
-}}
-
-function zoomImage(img) {{
-    const overlay = document.createElement('div');
-    overlay.className = 'zoom-overlay';
-    overlay.innerHTML = '<img src="' + img.src + '">';
-    overlay.onclick = () => overlay.remove();
-    document.addEventListener('keydown', function esc(e) {{
-        if (e.key === 'Escape') {{ overlay.remove(); document.removeEventListener('keydown', esc); }}
+document.querySelectorAll('.card-push').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        const card = btn.closest('.gallery-card');
+        btn.style.background = 'var(--gold-dim)';
+        btn.style.color = '#fff';
+        try {{
+            const data = await apiCall('/api/galleries/' + encodeURIComponent(card.dataset.source) + '/' + encodeURIComponent(card.dataset.filename) + '/push', 'POST');
+            toast(data.message || 'An TRMNL gepusht!', 'success');
+        }} catch(e) {{}}
+        setTimeout(() => {{ btn.style.background = ''; btn.style.color = ''; }}, 1500);
     }});
-    document.body.appendChild(overlay);
-}}
+}});
+
+document.querySelectorAll('.card-delete').forEach(btn => {{
+    btn.addEventListener('click', async () => {{
+        if (!confirm('Dieses Bild aus der Galerie löschen?')) return;
+        const card = btn.closest('.gallery-card');
+        try {{
+            await apiCall('/api/galleries/' + encodeURIComponent(card.dataset.source) + '/' + encodeURIComponent(card.dataset.filename), 'DELETE');
+            card.style.transform = 'scale(0.95)';
+            card.style.opacity = '0';
+            card.style.transition = 'all 0.3s';
+            setTimeout(() => {{
+                card.remove();
+                const remaining = document.querySelectorAll('.gallery-card:not([style*="display: none"])').length;
+                document.getElementById('img-count').textContent = remaining + ' Bilder';
+            }}, 300);
+            toast('Bild gelöscht', 'success');
+        }} catch(e) {{}}
+    }});
+}});
+
+document.querySelectorAll('.zoomable').forEach(img => {{
+    img.addEventListener('click', () => {{
+        const overlay = document.createElement('div');
+        overlay.className = 'zoom-overlay';
+        const big = document.createElement('img');
+        big.src = img.src;
+        overlay.appendChild(big);
+        overlay.onclick = () => overlay.remove();
+        document.addEventListener('keydown', function esc(e) {{
+            if (e.key === 'Escape') {{ overlay.remove(); document.removeEventListener('keydown', esc); }}
+        }});
+        document.body.appendChild(overlay);
+    }});
+}});
 
 // Apply initial filter from URL
 const params = new URLSearchParams(window.location.search);

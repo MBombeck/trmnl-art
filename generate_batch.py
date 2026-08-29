@@ -258,8 +258,12 @@ def main():
             break
 
         if result and isinstance(result, bytes):
+            from app.processing import prepare_asset_image
+
             img = Image.open(io.BytesIO(result)).convert("RGB")
-            img = img.resize((800, 480), Image.LANCZOS)
+            # Trim baked-in white bars, then aspect-preserving cover-fit to 800x480
+            # (the old plain resize() distorted the 16:9 Imagen output).
+            img = prepare_asset_image(img)
             outpath = GALLERY_DIR / f"{name}.png"
             img.save(outpath, "PNG", optimize=True)
             kb = outpath.stat().st_size / 1024

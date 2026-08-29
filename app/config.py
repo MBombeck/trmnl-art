@@ -35,6 +35,23 @@ HISTORY_FILE = DATA_DIR / "history.json"
 CURRENT_IMAGE = DATA_DIR / "current.png"
 LOG_FILE = DATA_DIR / "trmnl-art.log"
 GOAT_GALLERY_DIR = DATA_DIR / "goat-gallery"
+SETTINGS_FILE = DATA_DIR / "settings.json"
+HASHES_FILE = DATA_DIR / "gallery-hashes.json"
+MIGRATION_LOG_FILE = DATA_DIR / "migration-log.json"
+PENDING_DIR = DATA_DIR / "pending"
+
+# Admin auth (HTTP Basic). Read dynamically in app.security so tests can
+# override at runtime — these are only documented defaults.
+ADMIN_USERNAME_DEFAULT = "marc"
+
+# Tagesimpulse (separate container, reached via public Traefik route).
+# Empty string disables the dashboard panel (used in tests).
+TAGESIMPULSE_API_URL = os.environ.get(
+    "TAGESIMPULSE_API_URL", "https://trmnl-art.bombeck.io/tagesimpulse/api/trmnl"
+)
+TAGESIMPULSE_BROWSER_URL = os.environ.get(
+    "TAGESIMPULSE_BROWSER_URL", "https://trmnl-art.bombeck.io/tagesimpulse/"
+)
 
 # App
 APP_URL = os.environ.get("APP_URL", "http://localhost:8000")

@@ -17,6 +17,7 @@ from PIL import Image
 
 from app.config import DATA_DIR, DISPLAY_HEIGHT, DISPLAY_WIDTH, GEMINI_API_KEY, GOAT_GALLERY_DIR
 from app.gallery import is_blacklisted
+from app.util import read_json, write_json_atomic
 
 log = logging.getLogger("trmnl-art.goat-art")
 
@@ -421,13 +422,13 @@ CREATIVE_THEMES = [
 
 
 def _load_goat_history() -> dict:
-    if HISTORY_FILE.exists():
-        return json.loads(HISTORY_FILE.read_text())
-    return {"shown_gallery": [], "shown_generated": [], "last_push_date": None}
+    return read_json(HISTORY_FILE, None) or {
+        "shown_gallery": [], "shown_generated": [], "last_push_date": None
+    }
 
 
 def _save_goat_history(history: dict):
-    HISTORY_FILE.write_text(json.dumps(history, indent=2, ensure_ascii=False))
+    write_json_atomic(HISTORY_FILE, history)
 
 
 def _generate_image_via_api(prompt: str) -> bytes | None:
@@ -487,8 +488,12 @@ def _build_creative_prompt() -> tuple[str, str]:
     return prompt, title
 
 
-def fetch_goat_art() -> tuple[bytes, str] | None:
-    """Get the next goat art image.
+def fetch_goat_art() -> tuple[bytes, str, str] | None:
+    """Get the next goat art image as (img_bytes, title, origin).
+
+    origin is "gallery" for images read from the pre-generated gallery
+    (must NOT be re-saved by the caller) or "fresh" for newly generated
+    images (should be saved once).
 
     Strategy:
     1. 70% chance: serve from pre-generated gallery (if available)
@@ -530,7 +535,7 @@ def fetch_goat_art() -> tuple[bytes, str] | None:
     return None
 
 
-def _serve_from_gallery(gallery_files: list[Path], history: dict, today: str) -> tuple[bytes, str] | None:
+def _serve_from_gallery(gallery_files: list[Path], history: dict, today: str) -> tuple[bytes, str, str] | None:
     """Serve a pre-generated image from the gallery."""
     shown = set(history.get("shown_gallery", []))
     available = [f for f in gallery_files if f.stem not in shown]
@@ -556,10 +561,10 @@ def _serve_from_gallery(gallery_files: list[Path], history: dict, today: str) ->
     _save_goat_history(history)
 
     log.info(f"Gallery: {title} ({len(img_bytes)/1024:.0f} KB)")
-    return img_bytes, title
+    return img_bytes, title, "gallery"
 
 
-def _generate_fresh(history: dict, today: str) -> tuple[bytes, str] | None:
+def _generate_fresh(history: dict, today: str) -> tuple[bytes, str, str] | None:
     """Generate a fresh creative image via API."""
     # 50/50: use a gallery prompt we haven't generated, or a creative template
     if random.random() < 0.5:
@@ -586,10 +591,10 @@ def _generate_fresh(history: dict, today: str) -> tuple[bytes, str] | None:
     _save_goat_history(history)
 
     log.info(f"Generated fresh: {title}")
-    return img_bytes, title
+    return img_bytes, title, "fresh"
 
 
-def force_push() -> tuple[bytes, str] | None:
+def force_push() -> tuple[bytes, str, str] | None:
     """Force-push a new image, ignoring the daily limit."""
     history = _load_goat_history()
     # Clear today's push date to allow re-push

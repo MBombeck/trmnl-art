@@ -1,6 +1,11 @@
-"""Job scheduler with self-healing retry logic."""
+"""Job scheduler with self-healing retry logic.
+
+The active source lives in data/settings.json (see app.state); switching it
+via the API re-registers the cron jobs at runtime (reschedule()).
+"""
 
 import logging
+import random
 import re
 import time
 from datetime import datetime
@@ -9,7 +14,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.config import (
-    ART_SOURCE,
     CURRENT_IMAGE,
     DATA_DIR,
     GOAT_ART_CRON_HOUR,
@@ -23,9 +27,11 @@ from app.config import (
     TIMEZONE,
 )
 from app.gallery import save_image
-from app.processing import process_image
+from app.processing import encode_png, open_rgb, prepare_asset_image, render_display
 from app.sources import fetch_nasa_image, fetch_rijksmuseum_image
+from app.state import get_active_source
 from app.trmnl import push_to_trmnl
+from app.util import write_bytes_atomic
 
 log = logging.getLogger("trmnl-art.scheduler")
 
@@ -35,6 +41,8 @@ job_status = {
     "nasa": {"last_run": None, "last_success": None, "last_error": None, "retries": 0},
     "goat-art": {"last_run": None, "last_success": None, "last_error": None, "retries": 0},
 }
+
+_JOB_IDS = ("goat_art_daily", "rijksmuseum_daily", "nasa_daily", "random_daily")
 
 
 def _make_gallery_filename(description: str) -> str:
@@ -47,8 +55,14 @@ def _make_gallery_filename(description: str) -> str:
     return f"{name}_{date_suffix}.png"
 
 
-def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool = False):
-    """Generic job runner with error handling and retry tracking."""
+def _run_job(source: str, fetch_fn):
+    """Generic job runner with error handling and retry tracking.
+
+    fetch_fn returns (img_bytes, description) for freshly fetched/generated
+    images or (img_bytes, description, origin) where origin is "gallery" for
+    images that were read from the gallery (those are NOT re-saved — this was
+    the duplicate-per-push bug).
+    """
     status = job_status[source]
     status["last_run"] = datetime.now().isoformat()
 
@@ -57,24 +71,29 @@ def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool
         if not result:
             raise RuntimeError(f"No image from {source}")
 
-        img_data, description = result
-
-        if skip_processing:
-            # Goat art images are already 800x480 PNGs — just save directly
-            png_bytes = img_data
+        if len(result) == 3:
+            img_data, description, origin = result
         else:
-            png_bytes, analysis = process_image(img_data, use_2bit=use_2bit)
+            img_data, description = result
+            origin = "fresh"
 
-        # Save as current image
+        # Full pipeline: sanity decode -> trim borders + cover-fit 800x480
+        # (skipped when already exact) -> e-ink grading for the display.
+        img = prepare_asset_image(open_rgb(img_data))
+        display_bytes = render_display(img)
+
+        # Save as current image (atomic)
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        CURRENT_IMAGE.write_bytes(png_bytes)
+        write_bytes_atomic(CURRENT_IMAGE, display_bytes)
 
-        # Persist to source gallery
-        try:
-            gallery_fn = _make_gallery_filename(description)
-            save_image(source, gallery_fn, png_bytes, description)
-        except Exception as e:
-            log.warning(f"Failed to save to gallery: {e}")
+        # Persist fresh images to the source gallery (gallery-origin images
+        # already live there — re-saving them created duplicates).
+        if origin != "gallery":
+            try:
+                gallery_fn = _make_gallery_filename(description)
+                save_image(source, gallery_fn, encode_png(img), description)
+            except Exception as e:
+                log.warning(f"Failed to save to gallery: {e}")
 
         # Push to TRMNL
         if not push_to_trmnl(description):
@@ -96,7 +115,7 @@ def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool
             import threading
             def delayed_retry():
                 time.sleep(RETRY_DELAY_MINUTES * 60)
-                _run_job(source, fetch_fn, use_2bit, skip_processing)
+                _run_job(source, fetch_fn)
             t = threading.Thread(target=delayed_retry, daemon=True)
             t.start()
         else:
@@ -106,7 +125,7 @@ def _run_job(source: str, fetch_fn, use_2bit: bool = True, skip_processing: bool
 def run_goat_art():
     """Scheduled job: fetch and push goat art image."""
     from app.goat_art import fetch_goat_art
-    _run_job("goat-art", fetch_goat_art, skip_processing=True)
+    _run_job("goat-art", fetch_goat_art)
 
 
 def run_rijksmuseum():
@@ -119,12 +138,25 @@ def run_nasa():
     _run_job("nasa", fetch_nasa_image)
 
 
+def run_random():
+    """Scheduled job for source 'random': pick one source per day."""
+    source = random.choice(["goat-art", "rijksmuseum", "nasa"])
+    log.info(f"Random source of the day: {source}")
+    {"goat-art": run_goat_art, "rijksmuseum": run_rijksmuseum, "nasa": run_nasa}[source]()
+
+
 scheduler = BackgroundScheduler(timezone=TIMEZONE)
 
 
-def start_scheduler():
-    """Start the background scheduler based on ART_SOURCE config."""
-    if ART_SOURCE == "goat-art":
+def reschedule(source: str):
+    """(Re-)register cron jobs for the given active source."""
+    for job_id in _JOB_IDS:
+        try:
+            scheduler.remove_job(job_id)
+        except Exception:
+            pass
+
+    if source == "goat-art":
         scheduler.add_job(
             run_goat_art,
             CronTrigger(hour=GOAT_ART_CRON_HOUR, minute=GOAT_ART_CRON_MINUTE, timezone=TIMEZONE),
@@ -133,9 +165,9 @@ def start_scheduler():
             misfire_grace_time=3600,
         )
         log.info(
-            f"Scheduler started: Goat Art at {GOAT_ART_CRON_HOUR}:{GOAT_ART_CRON_MINUTE:02d} ({TIMEZONE})"
+            f"Schedule: Goat Art at {GOAT_ART_CRON_HOUR}:{GOAT_ART_CRON_MINUTE:02d} ({TIMEZONE})"
         )
-    elif ART_SOURCE == "mixed":
+    elif source == "mixed":
         # Legacy behavior: Rijksmuseum morning, NASA afternoon
         scheduler.add_job(
             run_rijksmuseum,
@@ -152,10 +184,10 @@ def start_scheduler():
             misfire_grace_time=3600,
         )
         log.info(
-            f"Scheduler started: Rijksmuseum at {RIJKSMUSEUM_CRON_HOUR}:{RIJKSMUSEUM_CRON_MINUTE:02d}, "
+            f"Schedule: Rijksmuseum at {RIJKSMUSEUM_CRON_HOUR}:{RIJKSMUSEUM_CRON_MINUTE:02d}, "
             f"NASA at {NASA_CRON_HOUR}:{NASA_CRON_MINUTE:02d} ({TIMEZONE})"
         )
-    elif ART_SOURCE == "rijksmuseum":
+    elif source == "rijksmuseum":
         scheduler.add_job(
             run_rijksmuseum,
             CronTrigger(hour=RIJKSMUSEUM_CRON_HOUR, minute=RIJKSMUSEUM_CRON_MINUTE, timezone=TIMEZONE),
@@ -163,8 +195,8 @@ def start_scheduler():
             replace_existing=True,
             misfire_grace_time=3600,
         )
-        log.info(f"Scheduler started: Rijksmuseum only at {RIJKSMUSEUM_CRON_HOUR}:{RIJKSMUSEUM_CRON_MINUTE:02d}")
-    elif ART_SOURCE == "nasa":
+        log.info(f"Schedule: Rijksmuseum only at {RIJKSMUSEUM_CRON_HOUR}:{RIJKSMUSEUM_CRON_MINUTE:02d}")
+    elif source == "nasa":
         scheduler.add_job(
             run_nasa,
             CronTrigger(hour=NASA_CRON_HOUR, minute=NASA_CRON_MINUTE, timezone=TIMEZONE),
@@ -172,16 +204,34 @@ def start_scheduler():
             replace_existing=True,
             misfire_grace_time=3600,
         )
-        log.info(f"Scheduler started: NASA only at {NASA_CRON_HOUR}:{NASA_CRON_MINUTE:02d}")
+        log.info(f"Schedule: NASA only at {NASA_CRON_HOUR}:{NASA_CRON_MINUTE:02d}")
+    elif source == "random":
+        scheduler.add_job(
+            run_random,
+            CronTrigger(hour=GOAT_ART_CRON_HOUR, minute=GOAT_ART_CRON_MINUTE, timezone=TIMEZONE),
+            id="random_daily",
+            replace_existing=True,
+            misfire_grace_time=3600,
+        )
+        log.info(f"Schedule: random source daily at {GOAT_ART_CRON_HOUR}:{GOAT_ART_CRON_MINUTE:02d}")
 
-    scheduler.start()
+
+def start_scheduler():
+    """Start the background scheduler based on the persisted active source."""
+    source = get_active_source()
+    reschedule(source)
+    if not scheduler.running:
+        scheduler.start()
+    log.info(f"Scheduler started (source: {source})")
 
 
 def get_status() -> dict:
     """Get current scheduler and job status."""
     next_runs = {}
     for job in scheduler.get_jobs():
-        next_runs[job.id] = str(job.next_run_time) if job.next_run_time else None
+        # next_run_time is unset on pending jobs (scheduler not started yet)
+        nrt = getattr(job, "next_run_time", None)
+        next_runs[job.id] = str(nrt) if nrt else None
 
     jobs = {}
     for source, status in job_status.items():
@@ -190,8 +240,9 @@ def get_status() -> dict:
 
     return {
         "scheduler_running": scheduler.running,
-        "art_source": ART_SOURCE,
+        "art_source": get_active_source(),
         "jobs": jobs,
+        "next_runs": next_runs,
         "current_image_exists": CURRENT_IMAGE.exists(),
         "current_image_size_kb": round(CURRENT_IMAGE.stat().st_size / 1024, 1) if CURRENT_IMAGE.exists() else 0,
     }
