@@ -174,20 +174,76 @@ def _call_imagen(prompt: str) -> bytes:
     return base64.b64decode(predictions[0]["bytesBase64Encoded"])
 
 
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
+
+
+def _call_openai(prompt: str) -> bytes:
+    """Fallback-Backend: OpenAI gpt-image-1 (Querformat, mittlere Qualität)."""
+    try:
+        r = requests.post(
+            "https://api.openai.com/v1/images/generations",
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": OPENAI_IMAGE_MODEL,
+                "prompt": prompt,
+                "size": "1536x1024",
+                "quality": "medium",
+                "n": 1,
+            },
+            timeout=180,
+        )
+    except requests.Timeout:
+        raise GeneratorError("Zeitüberschreitung bei der Bildgenerierung (OpenAI, 180s).", status_code=504)
+    except requests.RequestException as e:
+        raise GeneratorError(f"OpenAI-API nicht erreichbar: {e}", status_code=502)
+
+    if r.status_code != 200:
+        try:
+            msg = r.json().get("error", {}).get("message", "")[:200]
+        except Exception:
+            msg = r.text[:200]
+        log.error(f"OpenAI image error ({r.status_code}): {msg}")
+        raise GeneratorError(f"OpenAI-Bildgenerierung fehlgeschlagen ({r.status_code}): {msg}", status_code=502)
+
+    data = r.json().get("data", [])
+    if not data or not data[0].get("b64_json"):
+        raise GeneratorError("OpenAI hat kein Bild geliefert. Bitte den Prompt anpassen.", status_code=422)
+    return base64.b64decode(data[0]["b64_json"])
+
+
+def _generate_image(prompt: str) -> tuple[bytes, str]:
+    """Erst Imagen (falls Key), bei leerem Guthaben/Quota automatisch OpenAI-Fallback."""
+    if config.GEMINI_API_KEY:
+        try:
+            return _call_imagen(prompt), f"imagen:{IMAGEN_MODEL}"
+        except GeneratorError as e:
+            if e.status_code == 429 and OPENAI_API_KEY:
+                log.warning(f"Imagen 429 — Fallback auf OpenAI {OPENAI_IMAGE_MODEL}: {e}")
+                return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
+            raise
+    if OPENAI_API_KEY:
+        return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
+    raise GeneratorError(
+        "Generator nicht konfiguriert: GEMINI_API_KEY oder OPENAI_API_KEY setzen.",
+        status_code=503,
+    )
+
+
 def create_pending(
     style_preset: str | None,
     subject: str | None,
     custom_prompt: str | None,
 ) -> dict:
     """Generate an image and store it as a pending item. Returns its meta."""
-    if not config.GEMINI_API_KEY:
+    if not config.GEMINI_API_KEY and not OPENAI_API_KEY:
         raise GeneratorError(
-            "Generator nicht konfiguriert: Umgebungsvariable GEMINI_API_KEY fehlt.",
+            "Generator nicht konfiguriert: GEMINI_API_KEY oder OPENAI_API_KEY setzen.",
             status_code=503,
         )
 
     prompt, title = _build_prompt(style_preset, subject, custom_prompt)
-    raw = _call_imagen(prompt)
+    raw, backend = _generate_image(prompt)
 
     # Post-process: sanity decode -> trim white bars -> cover-fit 800x480
     img = prepare_asset_image(open_rgb(raw))
@@ -205,6 +261,7 @@ def create_pending(
         "style": style_preset or ("custom" if (custom_prompt or "").strip() else "pop-art"),
         "subject": (subject or "").strip() or DEFAULT_SUBJECT,
         "title": title,
+        "backend": backend,
         "created_at": datetime.now().isoformat(),
     }
     write_json_atomic(PENDING_DIR / f"{item_id}.json", meta)
