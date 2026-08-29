@@ -204,7 +204,15 @@ def _call_openai(prompt: str) -> bytes:
         except Exception:
             msg = r.text[:200]
         log.error(f"OpenAI image error ({r.status_code}): {msg}")
-        raise GeneratorError(f"OpenAI-Bildgenerierung fehlgeschlagen ({r.status_code}): {msg}", status_code=502)
+        if "credit" in msg.lower():
+            raise GeneratorError(
+                "OpenAI-Guthaben aufgebraucht — bitte unter "
+                "https://platform.openai.com/settings/organization/billing aufladen.",
+                status_code=429,
+            )
+        # 4xx statt 502: Cloudflare ersetzt 502-Antworten durch eine eigene
+        # Fehlerseite und verschluckt unsere Meldung.
+        raise GeneratorError(f"OpenAI-Bildgenerierung fehlgeschlagen ({r.status_code}): {msg}", status_code=424)
 
     data = r.json().get("data", [])
     if not data or not data[0].get("b64_json"):
@@ -220,7 +228,18 @@ def _generate_image(prompt: str) -> tuple[bytes, str]:
         except GeneratorError as e:
             if e.status_code == 429 and OPENAI_API_KEY:
                 log.warning(f"Imagen 429 — Fallback auf OpenAI {OPENAI_IMAGE_MODEL}: {e}")
-                return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
+                try:
+                    return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
+                except GeneratorError as e2:
+                    if e2.status_code == 429:
+                        raise GeneratorError(
+                            "Beide Bild-Konten sind ohne Guthaben: Gemini "
+                            "(https://ai.studio/projects) UND OpenAI "
+                            "(https://platform.openai.com/settings/organization/billing). "
+                            "Bitte eines aufladen — danach funktioniert der Generator sofort.",
+                            status_code=429,
+                        )
+                    raise
             raise
     if OPENAI_API_KEY:
         return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
