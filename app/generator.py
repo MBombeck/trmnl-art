@@ -7,6 +7,7 @@ they are accepted into the goat gallery (optionally pushed) or discarded.
 
 import base64
 import logging
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -27,9 +28,12 @@ from app.util import read_json, sha256_hex, slugify, write_bytes_atomic, write_j
 
 log = logging.getLogger("trmnl-art.generator")
 
+# Modell konfigurierbar: imagen-4.0-generate-001 (Standard, ~halber Preis) reicht
+# für 800×480-E-Ink; Ultra nur für maximale Detailtreue nötig.
+IMAGEN_MODEL = os.environ.get("IMAGEN_MODEL", "imagen-4.0-generate-001")
 IMAGEN_API_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "imagen-4.0-ultra-generate-001:predict"
+    f"{IMAGEN_MODEL}:predict"
 )
 
 DEFAULT_SUBJECT = "a cheerful goat"
@@ -132,6 +136,18 @@ def _call_imagen(prompt: str) -> bytes:
         raise GeneratorError(f"Imagen-API nicht erreichbar: {e}", status_code=502)
 
     if r.status_code == 429:
+        # Echte Ursache durchreichen: Quota (später erneut) vs. leere Prepaid-Credits (aufladen)
+        api_message = ""
+        try:
+            api_message = r.json().get("error", {}).get("message", "")
+        except Exception:
+            pass
+        if "prepayment" in api_message.lower() or "credits" in api_message.lower():
+            raise GeneratorError(
+                "Gemini-Guthaben aufgebraucht — bitte unter https://ai.studio/projects "
+                "Credits aufladen (Projekt → Billing).",
+                status_code=429,
+            )
         raise GeneratorError(
             "Imagen-Kontingent erschöpft (429). Bitte später erneut versuchen.",
             status_code=429,
