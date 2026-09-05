@@ -103,7 +103,12 @@ Läuft auf **apps-01** (159.69.23.98) via Coolify.
 | `WEBAUTHN_RP_ID` | `bombeck.io` | WebAuthn Relying-Party-ID (muss Suffix der Domain sein) |
 | `WEBAUTHN_ORIGINS` | `https://trmnl.bombeck.io,https://trmnl-art.bombeck.io` | Erlaubte Origins für Passkey-Ceremonies (kommasepariert) |
 | `TRMNL_WEBHOOK_UUID` | — | Webhook UUID vom TRMNL Private Plugin |
-| `GEMINI_API_KEY` | — | Google-API-Key für Imagen 4 Ultra (Generator + On-Demand-Ziegen) |
+| `GEMINI_API_KEY` | — | Google-API-Key für Imagen (Generator + On-Demand-Ziegen) |
+| `IMAGEN_MODEL` | `imagen-4.0-generate-001` | Imagen-Modell (Ultra: `imagen-4.0-ultra-generate-001`) |
+| `OPENAI_API_KEY` | — | OpenAI-Key, Fallback-Backend `gpt-image-1` bei leerem Gemini-Guthaben |
+| `OPENROUTER_API_KEY` | — | OpenRouter-Key, Backend für Gemini-Bildmodelle ohne Google-Prepaid |
+| `OPENROUTER_IMAGE_MODEL` | `google/gemini-3.1-flash-image` | Bildmodell auf OpenRouter (z. B. `google/gemini-3-pro-image`) |
+| `IMAGE_BACKEND` | `auto` | Bevorzugtes Backend: `auto` (Imagen → OpenAI → OpenRouter), `imagen`, `openai` oder `openrouter`; bei 429 greift der Rest der Kette |
 | `ART_SOURCE` | `goat-art` | Initiale Quelle (nur Fallback — Laufzeit-Quelle steht in `data/settings.json`) |
 | `NASA_API_KEY` | `DEMO_KEY` | NASA API Key |
 | `APP_URL` | `http://localhost:8000` | Öffentliche URL der App (für TRMNL-Bild-URL) |

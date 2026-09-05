@@ -125,3 +125,80 @@ def test_unknown_style_preset_rejected(client, auth, monkeypatch):
     monkeypatch.setattr(config, "GEMINI_API_KEY", "fake-key")
     r = client.post("/api/generate", json={"style_preset": "nope"}, auth=auth)
     assert r.status_code == 400
+
+
+def test_generate_falls_through_to_openrouter_after_quota(client, auth, monkeypatch):
+    import app.generator as generator
+    from app import config
+
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "fake-key")
+    monkeypatch.setattr(generator, "OPENAI_API_KEY", "")
+    monkeypatch.setattr(generator, "OPENROUTER_API_KEY", "fake-or-key")
+
+    def raise_quota(prompt):
+        raise generator.GeneratorError("Gemini-Guthaben aufgebraucht", status_code=429)
+
+    called = []
+    monkeypatch.setattr(generator, "_call_imagen", raise_quota)
+    monkeypatch.setattr(generator, "_call_openrouter", lambda p: called.append(p) or make_png(1408, 768))
+
+    r = client.post("/api/generate", json={"style_preset": "pop-art"}, auth=auth)
+    assert r.status_code == 200, r.text
+    assert called, "OpenRouter backend was not used as fallback"
+    pending = generator.list_pending()
+    assert pending and pending[0]["backend"].startswith("openrouter:")
+
+
+def test_generate_all_backends_exhausted_lists_every_account(client, auth, monkeypatch):
+    import app.generator as generator
+    from app import config
+
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "fake-key")
+    monkeypatch.setattr(generator, "OPENAI_API_KEY", "fake-oa")
+    monkeypatch.setattr(generator, "OPENROUTER_API_KEY", "fake-or")
+
+    def quota(prompt):
+        raise generator.GeneratorError("leer", status_code=429)
+
+    for fn in ("_call_imagen", "_call_openai", "_call_openrouter"):
+        monkeypatch.setattr(generator, fn, quota)
+
+    r = client.post("/api/generate", json={}, auth=auth)
+    assert r.status_code == 429
+    detail = r.json()["detail"]
+    for needle in ("ai.studio", "platform.openai.com", "openrouter.ai/settings/credits"):
+        assert needle in detail
+
+
+def test_image_backend_env_moves_openrouter_first(client, auth, monkeypatch):
+    import app.generator as generator
+    from app import config
+
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "fake-key")
+    monkeypatch.setattr(generator, "OPENROUTER_API_KEY", "fake-or")
+    monkeypatch.setattr(generator, "IMAGE_BACKEND", "openrouter")
+
+    order = []
+    monkeypatch.setattr(generator, "_call_imagen", lambda p: order.append("imagen") or make_png(1408, 768))
+    monkeypatch.setattr(generator, "_call_openrouter", lambda p: order.append("openrouter") or make_png(1408, 768))
+
+    r = client.post("/api/generate", json={"style_preset": "pop-art"}, auth=auth)
+    assert r.status_code == 200, r.text
+    assert order == ["openrouter"]
+
+
+def test_non_quota_error_does_not_fall_through(client, auth, monkeypatch):
+    import app.generator as generator
+    from app import config
+
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "fake-key")
+    monkeypatch.setattr(generator, "OPENROUTER_API_KEY", "fake-or")
+
+    def safety(prompt):
+        raise generator.GeneratorError("Sicherheitsfilter", status_code=422)
+
+    monkeypatch.setattr(generator, "_call_imagen", safety)
+    monkeypatch.setattr(generator, "_call_openrouter", lambda p: (_ for _ in ()).throw(AssertionError("must not run")))
+
+    r = client.post("/api/generate", json={}, auth=auth)
+    assert r.status_code == 422

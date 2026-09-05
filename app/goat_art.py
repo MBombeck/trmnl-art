@@ -1,10 +1,9 @@
 """Goat Art source — pre-generated gallery + on-demand Gemini generation.
 
-Serves famous paintings reimagined with goats, generated via Google Imagen 4 Ultra.
+Serves famous paintings reimagined with goats, generated via the shared image backend chain.
 Falls back to pre-generated gallery images when API is unavailable.
 """
 
-import base64
 import io
 import json
 import logging
@@ -12,16 +11,14 @@ import random
 from datetime import datetime
 from pathlib import Path
 
-import requests
 from PIL import Image
 
-from app.config import DATA_DIR, DISPLAY_HEIGHT, DISPLAY_WIDTH, GEMINI_API_KEY, GOAT_GALLERY_DIR
+from app.config import DATA_DIR, DISPLAY_HEIGHT, DISPLAY_WIDTH, GOAT_GALLERY_DIR
 from app.gallery import is_blacklisted
 from app.util import read_json, write_json_atomic
 
 log = logging.getLogger("trmnl-art.goat-art")
 
-IMAGEN_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-ultra-generate-001:predict"
 HISTORY_FILE = DATA_DIR / "goat-history.json"
 
 # Quality suffix appended to every prompt
@@ -431,44 +428,30 @@ def _save_goat_history(history: dict):
     write_json_atomic(HISTORY_FILE, history)
 
 
+def _generation_available() -> bool:
+    """True, wenn mindestens ein Bild-Backend (Gemini, OpenAI, OpenRouter) konfiguriert ist."""
+    from app import generator  # lazy: generator hängt nicht von goat_art ab
+
+    return generator.is_configured()
+
+
 def _generate_image_via_api(prompt: str) -> bytes | None:
-    """Generate an image using Imagen 4 Ultra API."""
-    if not GEMINI_API_KEY:
-        log.warning("No GEMINI_API_KEY configured, cannot generate on-demand")
+    """Generate an image through the shared backend chain (Imagen → OpenAI → OpenRouter)."""
+    from app import generator
+
+    if not generator.is_configured():
+        log.warning("No image backend configured (GEMINI_API_KEY / OPENAI_API_KEY / OPENROUTER_API_KEY)")
         return None
 
     full_prompt = prompt + QUALITY_SUFFIX
-
     try:
-        r = requests.post(
-            f"{IMAGEN_API_URL}?key={GEMINI_API_KEY}",
-            headers={"Content-Type": "application/json"},
-            json={
-                "instances": [{"prompt": full_prompt}],
-                "parameters": {"sampleCount": 1, "aspectRatio": "16:9"},
-            },
-            timeout=120,
-        )
-        if r.status_code != 200:
-            log.error(f"Imagen API error ({r.status_code}): {r.text[:300]}")
-            return None
-
-        data = r.json()
-        predictions = data.get("predictions", [])
-        if not predictions:
-            return None
-
-        img_b64 = predictions[0].get("bytesBase64Encoded")
-        if not img_b64:
-            return None
-
-        img_bytes = base64.b64decode(img_b64)
-        log.info(f"Generated image via Imagen 4 Ultra ({len(img_bytes)/1024:.0f} KB)")
-        return img_bytes
-
-    except Exception as e:
-        log.error(f"Imagen generation failed: {e}")
+        img_bytes, backend = generator._generate_image(full_prompt)
+    except generator.GeneratorError as e:
+        log.error(f"Image generation failed: {e}")
         return None
+
+    log.info(f"Generated image via {backend} ({len(img_bytes)/1024:.0f} KB)")
+    return img_bytes
 
 
 def _build_creative_prompt() -> tuple[str, str]:
@@ -515,14 +498,14 @@ def fetch_goat_art() -> tuple[bytes, str, str] | None:
     ] if GOAT_GALLERY_DIR.exists() else []
     use_gallery = True
 
-    if GEMINI_API_KEY and random.random() < 0.3:
+    if _generation_available() and random.random() < 0.3:
         use_gallery = False
 
     if use_gallery and gallery_files:
         return _serve_from_gallery(gallery_files, history, today)
 
     # Try fresh generation
-    if GEMINI_API_KEY:
+    if _generation_available():
         result = _generate_fresh(history, today)
         if result:
             return result

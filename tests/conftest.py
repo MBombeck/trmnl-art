@@ -12,6 +12,9 @@ os.environ["ADMIN_USERNAME"] = "marc"
 os.environ["ADMIN_PASSWORD"] = "test-pass"
 os.environ["TAGESIMPULSE_API_URL"] = ""  # no network in tests
 os.environ["GEMINI_API_KEY"] = ""
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENROUTER_API_KEY"] = ""
+os.environ["IMAGE_BACKEND"] = "auto"
 os.environ["TRMNL_WEBHOOK_UUID"] = ""
 os.environ["ART_SOURCE"] = "goat-art"
 

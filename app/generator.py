@@ -1,8 +1,14 @@
 """On-demand image generator ("Bilder generieren").
 
-Generates images via Imagen 4 Ultra, post-processes them (border trim +
-cover-fit 800x480) and parks them as pending items in data/pending/ until
-they are accepted into the goat gallery (optionally pushed) or discarded.
+Generates images via Imagen (Google), OpenAI gpt-image or OpenRouter (Gemini
+image models), post-processes them (border trim + cover-fit 800x480) and
+parks them as pending items in data/pending/ until they are accepted into
+the goat gallery (optionally pushed) or discarded.
+
+Backend order is Imagen → OpenAI → OpenRouter; every backend whose key is
+set takes part, and a 429 (quota / empty prepaid credits) hands over to the
+next one. IMAGE_BACKEND=imagen|openai|openrouter moves that backend to the
+front of the chain.
 """
 
 import base64
@@ -220,33 +226,126 @@ def _call_openai(prompt: str) -> bytes:
     return base64.b64decode(data[0]["b64_json"])
 
 
-def _generate_image(prompt: str) -> tuple[bytes, str]:
-    """Erst Imagen (falls Key), bei leerem Guthaben/Quota automatisch OpenAI-Fallback."""
-    if config.GEMINI_API_KEY:
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+# Gemini-Bildmodelle über OpenRouter (kein Google-Prepaid nötig). Flash reicht
+# für 800×480-E-Ink; google/gemini-3-pro-image für maximale Detailtreue.
+OPENROUTER_IMAGE_MODEL = os.environ.get("OPENROUTER_IMAGE_MODEL", "google/gemini-3.1-flash-image")
+# Bevorzugtes Backend: auto (Imagen → OpenAI → OpenRouter) oder ein fester Name,
+# der an den Anfang der Kette rückt. Die übrigen bleiben Fallback bei 429.
+IMAGE_BACKEND = os.environ.get("IMAGE_BACKEND", "auto").strip().lower()
+
+
+def _call_openrouter(prompt: str) -> bytes:
+    """Backend: OpenRouter Images API (Gemini-Bildmodelle, 16:9)."""
+    try:
+        r = requests.post(
+            "https://openrouter.ai/api/v1/images",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": config.APP_URL,
+                "X-Title": "TRMNL Art",
+            },
+            json={
+                "model": OPENROUTER_IMAGE_MODEL,
+                "prompt": prompt,
+                "aspect_ratio": "16:9",
+                "n": 1,
+            },
+            timeout=180,
+        )
+    except requests.Timeout:
+        raise GeneratorError("Zeitüberschreitung bei der Bildgenerierung (OpenRouter, 180s).", status_code=504)
+    except requests.RequestException as e:
+        raise GeneratorError(f"OpenRouter-API nicht erreichbar: {e}", status_code=502)
+
+    if r.status_code != 200:
         try:
-            return _call_imagen(prompt), f"imagen:{IMAGEN_MODEL}"
+            err = r.json().get("error", {})
+            msg = (err.get("message") if isinstance(err, dict) else str(err))[:200]
+        except Exception:
+            msg = r.text[:200]
+        log.error(f"OpenRouter image error ({r.status_code}): {msg}")
+        # 402 = Guthaben leer; OpenRouter meldet das je nach Modell auch als 429 mit "credits".
+        if r.status_code == 402 or "credit" in msg.lower():
+            raise GeneratorError(
+                "OpenRouter-Guthaben aufgebraucht — bitte unter "
+                "https://openrouter.ai/settings/credits aufladen.",
+                status_code=429,
+            )
+        if r.status_code == 429:
+            raise GeneratorError("OpenRouter-Kontingent erschöpft (429). Bitte später erneut versuchen.", status_code=429)
+        # 4xx statt 502: Cloudflare ersetzt 502-Antworten durch eine eigene Fehlerseite.
+        raise GeneratorError(f"OpenRouter-Bildgenerierung fehlgeschlagen ({r.status_code}): {msg}", status_code=424)
+
+    data = r.json().get("data", [])
+    item = data[0] if data else {}
+    if item.get("b64_json"):
+        return base64.b64decode(item["b64_json"])
+    if item.get("url"):
+        try:
+            img = requests.get(item["url"], timeout=60)
+            if img.status_code == 200 and img.content:
+                return img.content
+        except requests.RequestException as e:
+            raise GeneratorError(f"OpenRouter-Bild nicht abrufbar: {e}", status_code=502)
+    raise GeneratorError("OpenRouter hat kein Bild geliefert. Bitte den Prompt anpassen.", status_code=422)
+
+
+_BACKEND_LABELS = {
+    "imagen": "Gemini (https://ai.studio/projects)",
+    "openai": "OpenAI (https://platform.openai.com/settings/organization/billing)",
+    "openrouter": "OpenRouter (https://openrouter.ai/settings/credits)",
+}
+
+
+def _backend_chain() -> list[tuple[str, object, str]]:
+    """Konfigurierte Backends in Reihenfolge: (name, call, tag). Keys werden
+    zur Laufzeit gelesen, damit Tests sie per monkeypatch setzen können."""
+    available = {
+        "imagen": (config.GEMINI_API_KEY, _call_imagen, f"imagen:{IMAGEN_MODEL}"),
+        "openai": (OPENAI_API_KEY, _call_openai, f"openai:{OPENAI_IMAGE_MODEL}"),
+        "openrouter": (OPENROUTER_API_KEY, _call_openrouter, f"openrouter:{OPENROUTER_IMAGE_MODEL}"),
+    }
+    order = ["imagen", "openai", "openrouter"]
+    if IMAGE_BACKEND in available:
+        order = [IMAGE_BACKEND] + [b for b in order if b != IMAGE_BACKEND]
+    return [(name, available[name][1], available[name][2]) for name in order if available[name][0]]
+
+
+def is_configured() -> bool:
+    """True, sobald mindestens ein Bild-Backend einen Key hat."""
+    return bool(_backend_chain())
+
+
+def _generate_image(prompt: str) -> tuple[bytes, str]:
+    """Backends der Reihe nach; 429 (Quota / leeres Guthaben) reicht an das nächste weiter."""
+    chain = _backend_chain()
+    if not chain:
+        raise GeneratorError(
+            "Generator nicht konfiguriert: GEMINI_API_KEY, OPENAI_API_KEY oder OPENROUTER_API_KEY setzen.",
+            status_code=503,
+        )
+    exhausted: list[str] = []
+    last_error: GeneratorError | None = None
+    for name, call, tag in chain:
+        try:
+            return call(prompt), tag
         except GeneratorError as e:
-            if e.status_code == 429 and OPENAI_API_KEY:
-                log.warning(f"Imagen 429 — Fallback auf OpenAI {OPENAI_IMAGE_MODEL}: {e}")
-                try:
-                    return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
-                except GeneratorError as e2:
-                    if e2.status_code == 429:
-                        raise GeneratorError(
-                            "Beide Bild-Konten sind ohne Guthaben: Gemini "
-                            "(https://ai.studio/projects) UND OpenAI "
-                            "(https://platform.openai.com/settings/organization/billing). "
-                            "Bitte eines aufladen — danach funktioniert der Generator sofort.",
-                            status_code=429,
-                        )
-                    raise
-            raise
-    if OPENAI_API_KEY:
-        return _call_openai(prompt), f"openai:{OPENAI_IMAGE_MODEL}"
-    raise GeneratorError(
-        "Generator nicht konfiguriert: GEMINI_API_KEY oder OPENAI_API_KEY setzen.",
-        status_code=503,
-    )
+            if e.status_code != 429:
+                raise
+            last_error = e
+            exhausted.append(name)
+            log.warning(f"{name} 429 — nächstes Backend: {e}")
+    if len(exhausted) > 1:
+        raise GeneratorError(
+            "Alle Bild-Konten ohne Guthaben oder Kontingent: "
+            + ", ".join(_BACKEND_LABELS[n] for n in exhausted)
+            + ". Bitte eines aufladen — danach funktioniert der Generator sofort.",
+            status_code=429,
+        )
+    assert last_error is not None
+    raise last_error
 
 
 def create_pending(
